@@ -28,13 +28,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: lowercase repo name
+        run: |
+          echo "REPO_LC=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           # ⚠️ [내-계정명]과 [레포-이름]을 본인 것에 맞게 수정하세요.
-          tags: ghcr.io/${{ github.repository_owner }}/my-blog:latest
+          tags: ghcr.io/${{ env.REPO_LC }}:latest
           platforms: linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -44,4 +48,9 @@ jobs:
         run: |
           curl -X POST ${{ secrets.N8N_WEBHOOK_URL }} \
           -H "Content-Type: application/json" \
-          -d '{"status": "success", "repo": "${{ github.repository }}", "message": "빌드 및 푸시 완료!"}'
+          -H "X-N8N-API-KEY: ${{ secrets.N8N_AUTH_KEY }}" \
+          -d '{
+            "status": "success", 
+            "repo": "${{ github.repository }}", 
+            "message": "인증된 빌드 완료 신호입니다!"
+          }'
