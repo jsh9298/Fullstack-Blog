@@ -1,4 +1,6 @@
 name: CI/CD Pipeline
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
   push:
@@ -45,12 +47,16 @@ jobs:
 
       # 배포 성공 시 [n8n]으로 신호 보내기
       - name: Notify n8n
+        if: always() # 성공하든 실패하든 무조건 실행
         run: |
           curl -X POST ${{ secrets.N8N_WEBHOOK_URL }} \
           -H "Content-Type: application/json" \
           -H "X-N8N-API-KEY: ${{ secrets.N8N_AUTH_KEY }}" \
           -d '{
-            "status": "success", 
-            "repo": "${{ github.repository }}", 
-            "message": "인증된 빌드 완료 신호입니다!"
+            "status": "${{ job.status }}",
+            "repo": "${{ github.repository }}",
+            "workflow": "${{ github.workflow }}",
+            "run_id": "${{ github.run_id }}",
+            "actor": "${{ github.actor }}",
+            "commit_msg": "${{ github.event.head_commit.message }}"
           }'
