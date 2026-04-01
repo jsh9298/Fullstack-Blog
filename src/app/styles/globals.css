@@ -1,26 +1,76 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* 1. 기본 색상 레이어 */
+  --color-bg-l1: var(--bg-l1);
+  --color-bg-l2: var(--bg-l2);
+  --color-bg-l3: var(--bg-l3);
+
+  /* 2. 브랜드 컬러 및 자동 계산 파생색 */
+  --color-brand: var(--brand);
+  
+  /* 호버 시 20% 더 어둡게 */
+  --color-brand-hover: color-mix(in srgb, var(--brand), black 20%);
+  /* 강조용 연한 배경 (브랜드색 15% + 배경색 85%) */
+  --color-brand-muted: color-mix(in srgb, var(--brand), transparent 85%);
+
+  /* 3. 텍스트 및 보더 */
+  --color-text-main: var(--text-main);
+  --color-text-sub: var(--text-sub);
+  --color-border-main: var(--border-main);
+
+  /* 4. 그림자 */
+  --shadow-soft: var(--shadow-spec);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+:root {
+  /* ⭐️ 여기만 바꾸면 사이트 전체 테마색이 바뀝니다 */
+  --brand: #3b82f6; 
+
+  --bg-l1: #ffffff;
+  --bg-l2: #f8fafc;
+  --bg-l3: #f1f5f9;
+  --text-main: #0f172a;
+  --text-sub: #64748b;
+  --border-main: #e2e8f0;
+  --shadow-spec: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not(.light) {
+    --brand: #60a5fa; /* 다크모드용으로 약간 더 밝은 브랜드색 */
+    --bg-l1: #020617;
+    --bg-l2: #0f172a;
+    --bg-l3: #1e293b;
+    --text-main: #f8fafc;
+    --text-sub: #94a3b8;
+    --border-main: #334155;
+    --shadow-spec: 0 10px 15px -3px rgb(0 0 0 / 0.5);
   }
 }
 
+.dark {
+  --brand: #60a5fa;
+  --bg-l1: #020617;
+  --bg-l2: #0f172a;
+  --bg-l3: #1e293b;
+  --text-main: #f8fafc;
+  --text-sub: #94a3b8;
+  --border-main: #334155;
+  --shadow-spec: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+}
+
+.light {
+  --brand: #3b82f6;
+  --bg-l1: #ffffff;
+  --bg-l2: #f8fafc;
+  --bg-l3: #f1f5f9;
+  --text-main: #0f172a;
+  --text-sub: #64748b;
+  --border-main: #e2e8f0;
+  --shadow-spec: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply bg-bg-l1 text-text-main antialiased transition-colors duration-300;
 }
