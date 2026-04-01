@@ -2,12 +2,14 @@ import { ComponentPropsWithoutRef } from "react";
 import { twMerge } from "tailwind-merge";
 
 interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
-  variant?: "primary" | "secondary" | "outline" | "ghost";
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
+  size? : "sm" | "md" | "lg"
 }
 
 export const Button = ({ 
   children, 
-  variant = "primary", 
+  variant = "primary",
+  size = "md",
   className, 
   ...props 
 }: ButtonProps) => {
@@ -19,11 +21,18 @@ export const Button = ({
     secondary: "bg-bg-l3 text-text-main hover:bg-border-main",
     outline: "border border-border-main text-text-main hover:bg-bg-l2",
     ghost: "text-text-sub hover:text-text-main hover:bg-bg-l2",
+    danger:"bg-brand text-red hover:bg-brand-hover shadow-soft"
   };
+
+  const sizes = {
+    sm:"",
+    md:"",
+    lg:"",
+  }
 
   return (
     <button 
-      className={twMerge(base, styles[variant], className)} 
+      className={twMerge(base, styles[variant],sizes[size], className)} 
       {...props}
     >
       {children}

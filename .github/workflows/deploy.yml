@@ -49,6 +49,8 @@ jobs:
       - name: Notify n8n
         if: always() # 성공하든 실패하든 무조건 실행
         run: |
+          ERROR_LOG=$(tail -n 10 ${{ github.workspace }}/build.log 2>/dev/null || echo "No log available")
+
           curl -X POST ${{ secrets.N8N_WEBHOOK_URL }} \
           -H "Content-Type: application/json" \
           -H "X-N8N-API-KEY: ${{ secrets.N8N_AUTH_KEY }}" \
@@ -57,6 +59,8 @@ jobs:
             "repo": "${{ github.repository }}",
             "workflow": "${{ github.workflow }}",
             "run_id": "${{ github.run_id }}",
+            "run_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
             "actor": "${{ github.actor }}",
             "commit_msg": "${{ github.event.head_commit.message }}"
+            "error_detail": "'"${ERROR_LOG//$'\n'/\\n}"'"
           }'
