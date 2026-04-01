@@ -1,24 +1,18 @@
-import React from "react";
+import React, { ComponentPropsWithoutRef } from "react";
+import { twMerge } from "tailwind-merge";
 
-interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+// ComponentPropsWithoutRef로 통일하면 더 깔끔합니다.
+interface CardProps extends ComponentPropsWithoutRef<"div"> {
   children: React.ReactNode;
-  className?: string; // 외부에서 추가 스타일(padding, margin 등)을 주입받기 위함
 }
 
-export const Card = ({ children, className = "", ...props }: CardProps) => {
+export const Card = ({ children, className, ...props }: CardProps) => {
   return (
     <div
-      className={`
-        bg-white 
-        border 
-        border-gray-200 
-        rounded-xl 
-        shadow-sm 
-        overflow-hidden 
-        transition-shadow 
-        hover:shadow-md 
-        ${className}
-      `}
+      className={twMerge(
+        "bg-bg-l2 border border-border-main rounded-xl shadow-soft overflow-hidden transition-shadow hover:shadow-md",
+        className
+      )}
       {...props}
     >
       {children}
@@ -26,15 +20,20 @@ export const Card = ({ children, className = "", ...props }: CardProps) => {
   );
 };
 
-// 조금 더 세분화해서 쓰고 싶다면 아래처럼 Sub-component를 추가해도 좋습니다.
-export const CardHeader = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`p-4 border-b border-gray-100 font-semibold ${className}`}>{children}</div>
+export const CardHeader = ({ children, className }: CardProps) => (
+  <div className={twMerge("p-5 border-b border-border-main font-bold text-text-main", className)}>
+    {children}
+  </div>
 );
 
-export const CardContent = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`p-4 ${className}`}>{children}</div>
+export const CardContent = ({ children, className }: CardProps) => (
+  <div className={twMerge("p-5 text-text-main", className)}>
+    {children}
+  </div>
 );
 
-export const CardFooter = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`p-4 bg-gray-50 border-t border-gray-100 ${className}`}>{children}</div>
+export const CardFooter = ({ children, className }: CardProps) => (
+  <div className={twMerge("p-4 bg-bg-l3/50 border-t border-border-main", className)}>
+    {children}
+  </div>
 );

@@ -1,1 +1,0 @@
-export {FeedPage as default} from "@/src/views/feed";
