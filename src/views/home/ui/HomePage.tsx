@@ -1,3 +1,4 @@
+'use client';
 import { useState } from "react";
 import { PostCard } from "@/src/entities/post/ui/PostCard";
 import { Button, InputText ,TextArea } from "@/src/shared/ui"

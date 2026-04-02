@@ -45,22 +45,35 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # 배포 성공 시 [n8n]으로 신호 보내기
       - name: Notify n8n
-        if: always() # 성공하든 실패하든 무조건 실행
+        if: always()
         run: |
-          ERROR_LOG=$(tail -n 10 ${{ github.workspace }}/build.log 2>/dev/null | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}' || echo "No log available")
+          # 1. 로그 추출 (특수문자 처리 전 순수 로그)
+          RAW_LOG=$(tail -n 10 ${{ github.workspace }}/build.log 2>/dev/null || echo "No log available")
 
+          # 2. jq로 안전한 JSON 생성 (모든 이스케이프 자동 처리)
+          JSON_DATA=$(jq -n \
+            --arg status "${{ job.status }}" \
+            --arg repo "${{ github.repository }}" \
+            --arg workflow "${{ github.workflow }}" \
+            --arg run_id "${{ github.run_id }}" \
+            --arg run_url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --arg actor "${{ github.actor }}" \
+            --arg commit_msg "${{ github.event.head_commit.message }}" \
+            --arg error_detail "$RAW_LOG" \
+            '{
+              status: $status,
+              repo: $repo,
+              workflow: $workflow,
+              run_id: $run_id,
+              run_url: $run_url,
+              actor: $actor,
+              commit_msg: $commit_msg,
+              error_detail: $error_detail
+            }')
+
+          # 3. 전송
           curl -X POST ${{ secrets.N8N_WEBHOOK_URL }} \
-          -H "Content-Type: application/json" \
-          -H "X-N8N-API-KEY: ${{ secrets.N8N_AUTH_KEY }}" \
-          -d '{
-            "status": "${{ job.status }}",
-            "repo": "${{ github.repository }}",
-            "workflow": "${{ github.workflow }}",
-            "run_id": "${{ github.run_id }}",
-            "run_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-            "actor": "${{ github.actor }}",
-            "commit_msg": "${{ github.event.head_commit.message }}"
-            "error_detail": "'"${ERROR_LOG//$'\n'/\\n}"'"
-          }'
+            -H "Content-Type: application/json" \
+            -H "X-N8N-API-KEY: ${{ secrets.N8N_AUTH_KEY }}" \
+            -d "$JSON_DATA"

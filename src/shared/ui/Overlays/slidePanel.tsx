@@ -1,4 +1,4 @@
-// shared/ui/Overlays/SlidePanel.tsx
+'use client';
 import { ReactNode, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { twMerge } from "tailwind-merge";
