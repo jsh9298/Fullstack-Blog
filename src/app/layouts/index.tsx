@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 export const BaseLayout = ({ children }: { children: React.ReactNode }) => (
-  <div className="min-h-screen flex flex-col">
+  <div className="min-h-screen flex flex-col" id="filter-overlay" aria-hidden="true">
     <Header />
     <div className="flex-1 container mx-auto px-4">{children}</div>
     <footer className="p-6 text-center border-t text-gray-400">© 2026 CMS</footer>

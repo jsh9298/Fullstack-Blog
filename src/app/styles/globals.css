@@ -71,6 +71,17 @@
   --shadow-spec: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
 
+#filter-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+  backdrop-filter: none;
+  will-change: backdrop-filter;
+  display: none;
+}
+
+
 body {
   @apply bg-bg-l1 text-text-main antialiased transition-colors duration-300;
 }

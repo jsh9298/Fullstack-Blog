@@ -9,7 +9,7 @@ interface TextAreaProps extends ComponentPropsWithoutRef<"textarea"> {
 
 export const TextArea = ({ 
   label, 
-  error, 
+  error,
   className, 
   ...props // value, onChange, placeholder 등이 여기에 다 포함됨
 }: TextAreaProps) => {

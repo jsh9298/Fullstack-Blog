@@ -49,7 +49,7 @@ jobs:
       - name: Notify n8n
         if: always() # 성공하든 실패하든 무조건 실행
         run: |
-          ERROR_LOG=$(tail -n 10 ${{ github.workspace }}/build.log 2>/dev/null || echo "No log available")
+          ERROR_LOG=$(tail -n 10 ${{ github.workspace }}/build.log 2>/dev/null | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}' || echo "No log available")
 
           curl -X POST ${{ secrets.N8N_WEBHOOK_URL }} \
           -H "Content-Type: application/json" \
