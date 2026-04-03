@@ -1,4 +1,9 @@
 @import "tailwindcss";
+
+/* 수식 폰트 및 스타일 */
+@import "katex/dist/katex.min.css";
+
+
 @plugin "@tailwindcss/typography";
 
 @theme {
@@ -22,6 +27,9 @@
 
   /* 4. 그림자 */
   --shadow-soft: var(--shadow-spec);
+
+
+  --counter-reset-line: line;
 }
 
 :root {
@@ -72,10 +80,9 @@
   --shadow-spec: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
 
-/* 수식 폰트 및 스타일 */
-@import "katex/dist/katex.min.css";
 
-/* rehype-pretty-code 스타일 (선택사항) */
+
+/* rehype-pretty-code 스타일 */
 [data-rehype-pretty-code-figure] {
   @apply my-6 overflow-hidden rounded-xl border border-border-main;
 }
@@ -85,7 +92,7 @@
 }
 
 code {
-  @apply counter-reset:line;
+  @apply counter-reset-line;
 }
 
 
