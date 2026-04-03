@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @theme {
   /* 1. 기본 색상 레이어 */
@@ -71,15 +72,22 @@
   --shadow-spec: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
 
-#filter-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  pointer-events: none;
-  backdrop-filter: none;
-  will-change: backdrop-filter;
-  display: none;
+/* 수식 폰트 및 스타일 */
+@import "katex/dist/katex.min.css";
+
+/* rehype-pretty-code 스타일 (선택사항) */
+[data-rehype-pretty-code-figure] {
+  @apply my-6 overflow-hidden rounded-xl border border-border-main;
 }
+
+[data-rehype-pretty-code-title] {
+  @apply bg-bg-l3 px-4 py-2 text-xs font-mono text-text-sub border-b border-border-main;
+}
+
+code {
+  @apply counter-reset:line;
+}
+
 
 
 body {

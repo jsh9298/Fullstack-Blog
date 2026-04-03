@@ -3,6 +3,7 @@ import { use, useState } from "react";
 import { PostCard } from "@/src/entities/post/ui/PostCard";
 import { Button, InputText ,TextArea } from "@/src/shared/ui"
 import { BaseOverlay,SlidePanel,Badge,Typography } from "@/src/shared/ui";
+import { EditorContainer } from "@/src/features/post-editor/ui/Editor";
 
 
 export const HomePage = () => {
@@ -126,6 +127,17 @@ export const HomePage = () => {
         </div>
       </SlidePanel>
     </section>
+
+    <section className="space-y-6">
+      <h3 className="text-2xl font-bold border-b pb-2">6. Markdown Editor Test</h3>
+      <div className="space-y-4">
+
+        <EditorContainer>
+          
+        </EditorContainer>
+      </div>
+    </section>
+
 
   </main>);
 };
