@@ -28,8 +28,6 @@
   /* 4. 그림자 */
   --shadow-soft: var(--shadow-spec);
 
-
-  --counter-reset-line: line;
 }
 
 :root {
@@ -92,7 +90,12 @@
 }
 
 code {
-  @apply counter-reset-line;
+   counter-reset: line;
+}
+
+code > [data-line]::before{
+  counter-increment: line;
+  content: counter(line);
 }
 
 
