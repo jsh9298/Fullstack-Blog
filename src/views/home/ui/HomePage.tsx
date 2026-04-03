@@ -1,5 +1,5 @@
 'use client';
-import { useState } from "react";
+import { use, useState } from "react";
 import { PostCard } from "@/src/entities/post/ui/PostCard";
 import { Button, InputText ,TextArea } from "@/src/shared/ui"
 import { BaseOverlay,SlidePanel,Badge,Typography } from "@/src/shared/ui";
@@ -9,6 +9,10 @@ export const HomePage = () => {
 
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [isToast,setIsToast] = useState(false);
+  const [isDialog,setIsDialog] = useState(false);
+
+
   return (
   <main className="max-w-5xl mx-auto py-10 px-4 space-y-16">
    
@@ -86,7 +90,9 @@ export const HomePage = () => {
       <h3 className="text-2xl font-bold border-b pb-2">5. Overlays & Panels</h3>
       <div className="flex gap-4">
         <Button onClick={() => setIsOverlayOpen(true)}>Open Overlay</Button>
+        <Button onClick={() => setIsDialog(true) }>Open Dialog</Button>
         <Button variant="outline" onClick={() => setIsPanelOpen(true)}>Open Slide Panel</Button>
+        <Button variant="primary" onClick={() => setIsToast(true)}>Open Toast</Button>
       </div>
 
       <BaseOverlay isOpen={isOverlayOpen} onClose={() => setIsOverlayOpen(false)}>
@@ -97,11 +103,26 @@ export const HomePage = () => {
         </div>
       </BaseOverlay>
 
+      <BaseOverlay isOpen={isDialog} onClose={() => setIsDialog(false)} onConfirm={()=>setIsDialog(false)} variant="dialog">
+        <div className="bg-bg-l1 p-6 rounded-xl shadow-xl max-w-sm w-full border border-border-main">
+          <Typography variant="h3" className="mb-4">다이얼로그</Typography>
+          <Button className="w-full" onClick={() => setIsDialog(false)}>닫기</Button>
+          <Button className="w-full" onClick={() => setIsDialog(false)}>확인</Button>
+        </div>
+      </BaseOverlay>
+
       <SlidePanel isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)}>
         <div className="space-y-6">
           <Typography variant="body">SlidePanel은 우측에서 나타나는 사이드바 형태의 UI입니다.</Typography>
           <InputText label="사용자 별명" placeholder="입력하세요..." />
           <Button className="w-full" onClick={() => setIsPanelOpen(false)}>저장하기</Button>
+        </div>
+      </SlidePanel>
+
+
+      <SlidePanel isOpen={isToast} onClose={() => setIsToast(false)} variant="toast" duration={2000}>
+        <div className="space-y-6">
+          <Typography variant="h1">Toast</Typography>
         </div>
       </SlidePanel>
     </section>
