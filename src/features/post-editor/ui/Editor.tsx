@@ -2,9 +2,21 @@
 
 import { useState, useRef, useEffect } from "react";
 import { TextArea } from "@/src/shared/ui/DataEntry/textarea";
-import { MarkdownRenderer } from "@/src/shared";
+
+import dynamic from "next/dynamic";
+
+
+//import { MarkdownRenderer } from "@/src/shared";
 import { Button } from "@/src/shared/ui/Actions/button";
 import { Bold, Italic, Link, Code, List, Image as ImageIcon } from "lucide-react";
+
+const PreviewRenderer = dynamic(
+  () => import("@/src/shared").then((mod)=>mod.MarkdownRenderer),
+  {
+    ssr: false,
+    loading: () => <div className="p-6 text-text-sub">미리보기를 준비 중입니다...</div>,
+  }
+)
 
 export const EditorContainer = () => {
   const [content, setContent] = useState("");
@@ -67,7 +79,7 @@ export const EditorContainer = () => {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onScroll={handleScroll}
-            className="w-full h-full p-6 resize-none outline-none bg-transparent font-mono text-sm leading-relaxed"
+            className="w-full h-full rounded-none border-none p-6 resize-none outline-none bg-transparent font-mono text-sm leading-relaxed"
             placeholder="마크다운으로 생각을 기록하세요..."
           />
         </div>
@@ -77,7 +89,7 @@ export const EditorContainer = () => {
           onScroll={handleScroll}
           className="flex-1 overflow-y-auto p-6 bg-bg-l2/30"
         >
-          <MarkdownRenderer content={content} />
+          <PreviewRenderer content={content} />
         </div>
       </div>
     </div>
