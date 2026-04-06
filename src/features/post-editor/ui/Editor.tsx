@@ -79,7 +79,7 @@ export const EditorContainer = () => {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onScroll={handleScroll}
-            className="w-full h-full rounded-none border-none p-6 resize-none outline-none bg-transparent font-mono text-sm leading-relaxed"
+            className="w-full min-h-0 h-full rounded-none border-none p-6 resize-none outline-none bg-transparent font-mono text-sm leading-relaxed"
             placeholder="마크다운으로 생각을 기록하세요..."
           />
         </div>

@@ -23,7 +23,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
           ref={ref}
           className={twMerge(
             // 기본 스타일 (우리가 globals.css 변수 활용)
-            "w-full min-h-[200px] p-4 rounded-xl border transition-all duration-200 outline-none",
+            "w-full min-h-50 p-4 rounded-xl border transition-all duration-200 outline-none",
             "bg-bg-l2 border-border-main text-text-main shadow-soft",
             "placeholder:text-text-sub/40 resize-y",
             // 포커스 상태

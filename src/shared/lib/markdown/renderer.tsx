@@ -40,7 +40,9 @@ export function MarkdownRenderer({ content, className }: RendererProps) {
                 },
               ],
             ],
+            format: "mdx",
           },
+          parseFrontmatter: true,
         }}
       />
     </div>
