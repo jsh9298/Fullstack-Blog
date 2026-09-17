@@ -4,7 +4,9 @@ export const Sidebar = () => (
     <nav className="space-y-6">
       <div className="cursor-pointer hover:text-white transition">대시보드</div>
       <div className="cursor-pointer hover:text-white transition">글 관리</div>
-      <div className="cursor-pointer hover:text-white transition">스킨/테마 설정</div>
+      <div className="cursor-pointer hover:text-white transition">
+        스킨/테마 설정
+      </div>
     </nav>
   </aside>
 );

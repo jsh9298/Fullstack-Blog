@@ -1,9 +1,5 @@
 @import "tailwindcss";
 
-/* 수식 폰트 및 스타일 */
-@import "katex/dist/katex.min.css";
-
-
 @plugin "@tailwindcss/typography";
 
 @theme {

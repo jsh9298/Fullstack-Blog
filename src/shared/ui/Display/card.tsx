@@ -21,7 +21,7 @@ export const Card = <T extends ElementType = "div">({
     <Component
       className={twMerge(
         "bg-bg-l2 border border-border-main rounded-xl shadow-soft overflow-hidden flex flex-col",
-        className
+        className,
       )}
       {...props}
     >
@@ -30,28 +30,42 @@ export const Card = <T extends ElementType = "div">({
   );
 };
 
-
-export const CardHeader = ({ children, className, ...props }: ComponentPropsWithoutRef<"div">) => (
-  <div 
-    className={twMerge("p-5 border-b border-border-main font-bold text-lg text-text-main", className)} 
+export const CardHeader = ({
+  children,
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"div">) => (
+  <div
+    className={twMerge(
+      "p-5 border-b border-border-main font-bold text-lg text-text-main",
+      className,
+    )}
     {...props}
   >
     {children}
   </div>
 );
 
-export const CardContent = ({ children, className, ...props }: ComponentPropsWithoutRef<"div">) => (
-  <div 
-    className={twMerge("p-5 text-text-main flex-1", className)} 
-    {...props}
-  >
+export const CardContent = ({
+  children,
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"div">) => (
+  <div className={twMerge("p-5 text-text-main flex-1", className)} {...props}>
     {children}
   </div>
 );
 
-export const CardFooter = ({ children, className, ...props }: ComponentPropsWithoutRef<"div">) => (
-  <div 
-    className={twMerge("p-4 bg-bg-l3/30 border-t border-border-main", className)} 
+export const CardFooter = ({
+  children,
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"div">) => (
+  <div
+    className={twMerge(
+      "p-4 bg-bg-l3/30 border-t border-border-main",
+      className,
+    )}
     {...props}
   >
     {children}

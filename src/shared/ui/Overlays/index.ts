@@ -1,2 +1,2 @@
 export { BaseOverlay } from "./baseOverlay";
-export {SlidePanel} from "./slidePanel";
+export { SlidePanel } from "./slidePanel";

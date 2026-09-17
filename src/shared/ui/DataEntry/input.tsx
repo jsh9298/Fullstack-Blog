@@ -4,7 +4,7 @@ import { twMerge } from "tailwind-merge";
 interface InputProps extends ComponentPropsWithoutRef<"input"> {
   label?: string;
   error?: string;
-  leftSection?: ReactNode;  // 왼쪽 슬롯
+  leftSection?: ReactNode; // 왼쪽 슬롯
   rightSection?: ReactNode; // 오른쪽 슬롯
 }
 
@@ -18,11 +18,19 @@ export const InputText = ({
 }: InputProps) => {
   return (
     <div className="flex flex-col gap-1.5 w-full">
-      {label && <label className="text-sm font-semibold text-text-sub ml-1">{label}</label>}
-      
+      {label && (
+        <label className="text-sm font-semibold text-text-sub ml-1">
+          {label}
+        </label>
+      )}
+
       <div className="relative flex items-center">
-        {leftSection && <div className="absolute left-3 text-text-sub flex items-center">{leftSection}</div>}
-        
+        {leftSection && (
+          <div className="absolute left-3 text-text-sub flex items-center">
+            {leftSection}
+          </div>
+        )}
+
         <input
           {...props}
           className={twMerge(
@@ -32,11 +40,15 @@ export const InputText = ({
             leftSection && "pl-10",
             rightSection && "pr-10",
             error && "border-red-500 focus:ring-red-400",
-            className
+            className,
           )}
         />
-        
-        {rightSection && <div className="absolute right-3 text-text-sub flex items-center">{rightSection}</div>}
+
+        {rightSection && (
+          <div className="absolute right-3 text-text-sub flex items-center">
+            {rightSection}
+          </div>
+        )}
       </div>
 
       {error && <span className="text-xs text-red-500 mt-1 ml-1">{error}</span>}
