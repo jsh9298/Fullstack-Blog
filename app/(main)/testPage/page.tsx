@@ -2,22 +2,29 @@
 "use client";
 
 import { useState } from "react";
-// import dynamic from "next/dynamic";
-import type { EditorBlock } from "@/src/entities/editor-core/model/types";
-import { BlockViewer } from "@/src/shared";
+import dynamic from "next/dynamic";
+import type { EditorBlock } from "@/src/components/editor/editor-core/model/types";
+
 
 // 🚨 [FSD 가이드] 무거운 브라우저 전용 런타임을 가진 에디터들은 SSR을 비활성화하여 dynamic 로드합니다.
-// const BlockEditor = dynamic(
-//   () => import("@/src/shared/ui/block-editor/BlockEditor").then((mod) => mod.BlockEditor),  
-//   { ssr: false }
-// );
-// const CodeEditor = dynamic(
-//   () => import("@/src/shared/ui/code-editer/CodeEditor").then((mod) => mod.CodeEditor),
-//   { ssr: false }
-// );
+const BlockEditor = dynamic(
+  () => import("@/src/components/editor/block-editor/BlockEditor").then((mod) => mod.BlockEditor),  
+  { ssr: false }
+);
+const CodeEditor = dynamic(
+  () => import("@/src/components/editor/code-editer/CodeEditor").then((mod) => mod.CodeEditor),
+  { ssr: false }
+);
 
-import { BlockEditor } from "@/src/shared";
-import { CodeEditor } from "@/src/shared";
+const BlockViewer = dynamic(
+  () => import("@/src/components/editor/block-viewer/BlockViewer").then((mod)=> mod.BlockViewer),
+  {ssr:false }
+);
+
+
+// import { BlockViewer } from "@/src/shared";
+// import { BlockEditor } from "@/src/shared";
+// import { CodeEditor } from "@/src/shared";
 export default function GlobalSandboxPage() {
   // 🗂️ 1. 블록 에디터용 테스트 더미 데이터 상태
   const [blogBlocks, setBlogBlocks] = useState<EditorBlock[]>([
