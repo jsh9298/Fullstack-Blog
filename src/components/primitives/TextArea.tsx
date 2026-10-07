@@ -18,7 +18,7 @@ export interface TextAreaProps extends BasePrimitiveProps {
 }
 
 
-export default function TextArea({
+export function TextArea({
   placeholder =  "내용을 입력하세요...",
   defaultValue,
   value,

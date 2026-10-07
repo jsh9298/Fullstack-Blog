@@ -11,7 +11,7 @@ export interface TextProps extends BasePrimitiveProps {
   onContentChange?: (newContent: string) => void;
 }
 
-export default function Text({
+export function Text({
   content =  "본문 텍스트를 입력하세요.",
   isEditing,
   isInlineEditing = false,

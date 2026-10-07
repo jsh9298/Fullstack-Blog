@@ -6,7 +6,7 @@ import { BasePrimitiveProps } from "@/src/types/builder";
 import { convertLocalVarsToCssVars } from "@/src/utils/style";
 import { cn } from "@/src/utils/cn";
 
-interface PrimitiveBaseProps extends BasePrimitiveProps {
+export interface PrimitiveBaseProps extends BasePrimitiveProps {
   children: React.ReactNode;
   as?: React.ElementType;
 }

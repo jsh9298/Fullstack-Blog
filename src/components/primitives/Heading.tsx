@@ -5,41 +5,58 @@ import { BasePrimitiveProps } from "@/src/types/builder";
 import { useLocalVar } from "@/src/utils/style";
 import { cn } from "@/src/utils/cn";
 
+
+export type HeadingLevel = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+
 export interface HeadingProps extends BasePrimitiveProps {
   content?: string;
-  level?:"1"|"2"|"3"|"4"|"5"|"6";
+  level?:HeadingLevel;
   isInlineEditing?: boolean;
   onContentChange?: (newContent: string) => void;
 }
 
-export default function Heading({
+const DEFAULT_LEVEL_STYLES: Record<HeadingLevel, { fontSize: string; fontWeight: string; marginBottom: string }> = {
+  h1: { fontSize: "36px", fontWeight: "800", marginBottom: "16px" },
+  h2: { fontSize: "30px", fontWeight: "700", marginBottom: "14px" },
+  h3: { fontSize: "24px", fontWeight: "600", marginBottom: "12px" },
+  h4: { fontSize: "20px", fontWeight: "600", marginBottom: "10px" },
+  h5: { fontSize: "18px", fontWeight: "600", marginBottom: "8px" },
+  h6: { fontSize: "16px", fontWeight: "600", marginBottom: "8px" },
+};
+
+export function Heading({
   content =  "본문 텍스트를 입력하세요.",
   isEditing = false,
   isInlineEditing = false,
-  level = "1",
+  level = "h1",
   onContentChange,
   className,
   ...props
 }: HeadingProps) {
-    const handleChange = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.FocusEvent<HTMLHeadingElement>) => {
     if (!isInlineEditing) {
-      onContentChange?.(e.target.value);
+      onContentChange?.(e.target.textContent || "");
     }
   };
+
+  const HeaderTag = level;
+  const defaultStyle = DEFAULT_LEVEL_STYLES[level];
+
   return (
     <PrimitiveBase {...props} isEditing={isEditing}>
-        <h1
+        <HeaderTag
             contentEditable={isInlineEditing}
             suppressContentEditableWarning
             onBlur={handleChange}
             style={{
-            width: useLocalVar("width", "auto"),
-            margin: useLocalVar("margin", "0px 0px 12px 0px"),
-            color: useLocalVar("color", "#374151"),
-            fontSize: useLocalVar("fontSize", "16px"),
-            fontWeight: useLocalVar("fontWeight", "400"),
-            lineHeight: useLocalVar("lineHeight", "1.6"),
-            textAlign: useLocalVar("textAlign", "left") as React.CSSProperties["textAlign"],
+              width: useLocalVar("width", "auto"),
+              color: useLocalVar("color", "#111827"),
+              // localVars 값이 지정 안 되어 있으면 level별 기본 스타일을 적용
+              fontSize: useLocalVar("fontSize", defaultStyle.fontSize),
+              fontWeight: useLocalVar("fontWeight", defaultStyle.fontWeight),
+              lineHeight: useLocalVar("lineHeight", "1.25"),
+              marginBottom: useLocalVar("marginBottom", defaultStyle.marginBottom),
+              textAlign: useLocalVar("textAlign", "left") as React.CSSProperties["textAlign"],
             }}
             className={cn(
             "outline-none transition-all",
@@ -48,7 +65,7 @@ export default function Heading({
             )}
         >
             {content}
-        </h1>
+        </HeaderTag>
     </PrimitiveBase>
   );
 }

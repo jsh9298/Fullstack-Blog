@@ -15,7 +15,7 @@ export interface InputProps extends BasePrimitiveProps {
   onValueChange?: (value: string) => void;
 }
 
-export default function Input({
+export function Input({
   placeholder =  "내용을 입력하세요...",
   defaultValue = "",
   type = "text",

@@ -26,7 +26,7 @@ const DEFAULT_OPTIONS: SelectOption[] = [
   { label: "옵션 2", value: "option2" },
   { label: "옵션 3", value: "option3" },
 ];
-export default function Select({
+export function Select({
   options = DEFAULT_OPTIONS,
   placeholder = "선택해 주세요",
   value,

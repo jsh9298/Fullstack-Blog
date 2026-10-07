@@ -1,43 +1,48 @@
 "use client";
 
 import React from "react";
-import { ItemData } from "./CanvasItem";
+import { ItemSchema } from "@/src/types/builder";
 
 interface PropertyPanelProps {
-  selectedItem: ItemData | null;
-  onUpdateItem: (updatedItem: ItemData) => void;
+  selectedItem: ItemSchema | null;
+  onUpdateItem: (updatedItem: ItemSchema) => void;
   onDeleteItem?: (id: string) => void;
 }
 
-export function PropertyPanel({
-  selectedItem,
-  onUpdateItem,
-  onDeleteItem,
-}: PropertyPanelProps) {
+export function PropertyPanel({ selectedItem, onUpdateItem,onDeleteItem }: PropertyPanelProps) {
   if (!selectedItem) {
     return (
-      <aside className="w-80 bg-gray-50 border-l border-gray-200 p-6 flex items-center justify-center text-gray-400 text-xs">
+      <aside className="w-80 border-l border-gray-200 p-4 text-gray-400 text-sm">
         선택된 컴포넌트가 없습니다.
       </aside>
     );
   }
 
-  const handlePropChange = (key: string, value: any) => {
+  // LocalVar 상태 변경 핸들러
+  const handleLocalVarChange = (key: string, value: string) => {
     onUpdateItem({
       ...selectedItem,
-      props: { ...selectedItem.props, [key]: value },
+      localVars: {
+        ...selectedItem.localVars,
+        [key]: value,
+      },
     });
   };
 
-  const handleLocalVarChange = (varName: string, value: string) => {
+  // Props 상태 변경 핸들러 (버튼 텍스트 등)
+  const handlePropChange = (key: string, value: any) => {
     onUpdateItem({
       ...selectedItem,
-      localVars: { ...selectedItem.localVars, [varName]: value },
+      props: {
+        ...selectedItem.props,
+        [key]: value,
+      },
     });
   };
 
   return (
     <aside className="w-80 bg-white border-l border-gray-200 p-4 space-y-6 text-xs text-gray-700 select-none">
+      
       <div className="flex justify-between items-center border-b pb-3">
         <h2 className="font-bold text-gray-800">{selectedItem.id} ({selectedItem.type})</h2>
         {onDeleteItem && (
@@ -49,57 +54,61 @@ export function PropertyPanel({
           </button>
         )}
       </div>
-
-      {/* Props 설정 */}
       <div className="space-y-2">
-        <h3 className="font-semibold text-gray-900 border-b pb-1">일반 속성 (Props)</h3>
-        {selectedItem.type === "button" && (
-          <div>
-            <label className="block mb-1 text-gray-500">버튼 라벨</label>
+        <h3 className="font-semibold text-gray-800 border-b pb-2">
+          속성 편집 ({selectedItem.type})
+        </h3>
+
+        {/* 1. 컴포넌트 고유 Props 수정 (예: 버튼 라벨) */}
+        {selectedItem.props.label !== undefined && (
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-gray-600">라벨 텍스트</label>
             <input
               type="text"
               value={selectedItem.props.label || ""}
               onChange={(e) => handlePropChange("label", e.target.value)}
-              className="w-full border p-1.5 rounded"
-            />
-          </div>
-        )}
-        {selectedItem.type === "input" && (
-          <div>
-            <label className="block mb-1 text-gray-500">플레이스홀더</label>
-            <input
-              type="text"
-              value={selectedItem.props.placeholder || ""}
-              onChange={(e) => handlePropChange("placeholder", e.target.value)}
-              className="w-full border p-1.5 rounded"
+              className="w-full border rounded px-2 py-1 text-sm outline-none focus:border-blue-500"
             />
           </div>
         )}
       </div>
-
-      {/* Local Variables 설정 */}
-      <div className="space-y-3">
-        <h3 className="font-semibold text-gray-900 border-b pb-1">스타일 변수 (Local CSS)</h3>
-        <div>
-          <label className="block mb-1 text-gray-500">배경 색상 (`--local-bg`)</label>
+      {/* 2. UI 컨트롤러 기반 LocalVars 수정 (배경색, 패딩) */}
+      <div className="space-y-3 border-t pt-4">
+        <h4 className="text-xs font-bold text-gray-500 uppercase">스타일 설정 (LocalVars)</h4>
+        
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-gray-600">배경색 (bg)</label>
           <input
             type="color"
-            value={selectedItem.localVars?.["--local-bg"] || "#2563eb"}
-            onChange={(e) => handleLocalVarChange("--local-bg", e.target.value)}
-            className="w-full h-8 cursor-pointer p-0.5 border rounded"
+            value={selectedItem.localVars?.bg || "#2563eb"}
+            onChange={(e) => handleLocalVarChange("bg", e.target.value)}
+            className="w-full h-8 cursor-pointer rounded border"
           />
         </div>
-        <div>
-          <label className="block mb-1 text-gray-500">테두리 곡률 (`--local-radius`)</label>
+
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-gray-600">패딩 (padding)</label>
           <input
-            type="range"
-            min="0"
-            max="20"
-            value={parseInt(selectedItem.localVars?.["--local-radius"] || "6", 10)}
-            onChange={(e) => handleLocalVarChange("--local-radius", `${e.target.value}px`)}
-            className="w-full"
+            type="text"
+            value={selectedItem.localVars?.padding || "10px 20px"}
+            onChange={(e) => handleLocalVarChange("padding", e.target.value)}
+            className="w-full border rounded px-2 py-1 text-sm outline-none focus:border-blue-500"
           />
         </div>
+      </div>
+
+      {/* 3. 유저 직접 작성 Scoped CSS 수정 */}
+      <div className="space-y-1 border-t pt-4">
+        <label className="text-xs font-bold text-gray-500 uppercase">커스텀 Scoped CSS</label>
+        <textarea
+          rows={4}
+          value={selectedItem.customCss || ""}
+          onChange={(e) =>
+            onUpdateItem({ ...selectedItem, customCss: e.target.value })
+          }
+          placeholder="button:hover { brightness: 1.1; }"
+          className="w-full border rounded p-2 text-xs font-mono outline-none focus:border-blue-500"
+        />
       </div>
     </aside>
   );

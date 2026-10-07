@@ -1,25 +1,79 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useEffect, useState } from "react";
 
 interface SelectionOverlayProps {
   selectedId: string | null;
-  canvasRef: React.RefObject<HTMLDivElement | null>;
-  onUpdateStyle: (id: string, newStyles: Record<string, string>) => void;
+  onDelete?: (id: string) => void;
+   canvasRef: React.RefObject<HTMLDivElement | null>;
+    onUpdateStyle: (id: string, newStyles: Record<string, string>) => void;
 }
-
 interface Rect {
   top: number;
   left: number;
   width: number;
   height: number;
 }
+export function SelectionOverlay({ selectedId, onDelete,  canvasRef, onUpdateStyle,}: SelectionOverlayProps) {
+  const [rect, setRect] = useState<DOMRect | null>(null);
 
-export function SelectionOverlay({
-  selectedId,
-  canvasRef,
-  onUpdateStyle,
-}: SelectionOverlayProps) {
+  useEffect(() => {
+    if (!selectedId) {
+      setRect(null);
+      return;
+    }
+
+    const updateRect = () => {
+      // data-component-id 속성을 가진 DOM 요소를 추적
+      const element = document.querySelector(`[data-component-id="${selectedId}"]`);
+      if (element) {
+        setRect(element.getBoundingClientRect());
+      }
+    };
+
+    updateRect();
+    window.addEventListener("resize", updateRect);
+    window.addEventListener("scroll", updateRect, true);
+
+    return () => {
+      window.removeEventListener("resize", updateRect);
+      window.removeEventListener("scroll", updateRect, true);
+    };
+  }, [selectedId]);
+
+  if (!selectedId || !rect) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: rect.top,
+        left: rect.left,
+        width: rect.width,
+        height: rect.height,
+        pointerEvents: "none", // 클릭 이벤트를 뚫고 아래 캔버스로 전달
+      }}
+      className="z-50 border-2 border-blue-500 transition-all duration-75"
+    >
+      {/* 컴포넌트 태그 라벨 & 삭제 버튼 */}
+      <div className="absolute -top-6 left-0 flex items-center gap-1 bg-blue-500 px-2 py-0.5 text-[11px] text-white rounded-t pointer-events-auto">
+        <span>{selectedId}</span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete?.(selectedId);
+          }}
+          className="ml-1 hover:text-red-200"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+/*
   const [rect, setRect] = useState<Rect | null>(null);
   const isResizing = useRef(false);
 
@@ -120,41 +174,41 @@ export function SelectionOverlay({
         height: `${rect.height}px`,
       }}
     >
-      {/* 컴포넌트 라벨 & 크기 배지 */}
-      <div className="absolute -top-6 left-0 bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded-t font-mono select-none whitespace-nowrap">
-        {Math.round(rect.width)}px × {Math.round(rect.height)}px
-      </div>
+      {/* 컴포넌트 라벨 & 크기 배지 } */ 
+//       <div className="absolute -top-6 left-0 bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded-t font-mono select-none whitespace-nowrap">
+//         {Math.round(rect.width)}px × {Math.round(rect.height)}px
+//       </div>
 
-      {/* 8방향 리사이즈 핸들 노드 (pointer-events-auto 부여로 클릭/드래그 활성화) */}
-      {/* 동(East - 너비 조절) */}
-      <div
-        onMouseDown={(e) => handleResizeStart(e, "e")}
-        className="pointer-events-auto absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-e-resize hover:scale-125 transition-transform"
-      />
+//       {/* 8방향 리사이즈 핸들 노드 (pointer-events-auto 부여로 클릭/드래그 활성화) */}
+//       {/* 동(East - 너비 조절) */}
+//       <div
+//         onMouseDown={(e) => handleResizeStart(e, "e")}
+//         className="pointer-events-auto absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-e-resize hover:scale-125 transition-transform"
+//       />
 
-      {/* 남(South - 높이 조절) */}
-      <div
-        onMouseDown={(e) => handleResizeStart(e, "s")}
-        className="pointer-events-auto absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-s-resize hover:scale-125 transition-transform"
-      />
+//       {/* 남(South - 높이 조절) */}
+//       <div
+//         onMouseDown={(e) => handleResizeStart(e, "s")}
+//         className="pointer-events-auto absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-s-resize hover:scale-125 transition-transform"
+//       />
 
-      {/* 남동(South-East - 동시 조절) */}
-      <div
-        onMouseDown={(e) => handleResizeStart(e, "se")}
-        className="pointer-events-auto absolute -right-1.5 -bottom-1.5 w-3.5 h-3.5 bg-blue-500 border-2 border-white rounded-sm cursor-se-resize hover:scale-125 transition-transform"
-      />
+//       {/* 남동(South-East - 동시 조절) */}
+//       <div
+//         onMouseDown={(e) => handleResizeStart(e, "se")}
+//         className="pointer-events-auto absolute -right-1.5 -bottom-1.5 w-3.5 h-3.5 bg-blue-500 border-2 border-white rounded-sm cursor-se-resize hover:scale-125 transition-transform"
+//       />
 
-      {/* 패딩/간격 조절 Quick Bar (컴포넌트 내부 여백 조절용 인라인 핸들) */}
-      <div
-        onMouseDown={(e) => {
-          e.stopPropagation();
-          // 패딩 전용 조절 마우스 이벤트 바인딩 로직
-        }}
-        className="pointer-events-auto absolute top-2 right-2 px-1 bg-amber-400 text-[9px] font-bold text-gray-800 rounded cursor-ew-resize opacity-80 hover:opacity-100"
-        title="드래그하여 내부 패딩 조절"
-      >
-        PADDING
-      </div>
-    </div>
-  );
-}
+//       {/* 패딩/간격 조절 Quick Bar (컴포넌트 내부 여백 조절용 인라인 핸들) */}
+//       <div
+//         onMouseDown={(e) => {
+//           e.stopPropagation();
+//           // 패딩 전용 조절 마우스 이벤트 바인딩 로직
+//         }}
+//         className="pointer-events-auto absolute top-2 right-2 px-1 bg-amber-400 text-[9px] font-bold text-gray-800 rounded cursor-ew-resize opacity-80 hover:opacity-100"
+//         title="드래그하여 내부 패딩 조절"
+//       >
+//         PADDING
+//       </div>
+//     </div>
+//   );
+// }

@@ -1,3 +1,5 @@
+import React from "react";
+
 export type PrimitiveType =
   | "button"
   | "input"
@@ -7,11 +9,12 @@ export type PrimitiveType =
   | "heading"
   | "image"
   | "container"
-  | "checkbox"
+  | "options"
   | "divider"
   | "container";
 
-export interface LocalStyleProps {
+export interface LocalStyleProps extends React.CSSProperties {
+  [key: string]: string | number | undefined;
   width?: string;
   height?: string;
   padding?: string;
@@ -50,7 +53,6 @@ export interface ItemSchema<TProps = Record<string, any>> {
   type: PrimitiveType;    //컴포넌트 종류
   props: TProps;          // 속성
   customCss?: string;     //커스텀 css (문자열)
-  localVars?: Record<string, string>; //커스텀 css (ui 핸들러)
+  localVars?: Record<string, any>; //커스텀 css (ui 핸들러)
+  children?: ItemSchema[]; //하위 아이템 저장용. (트리구조 저장을 위함)
 }
-
-

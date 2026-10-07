@@ -4,12 +4,16 @@ import { BasePrimitiveProps } from "@/src/types/builder";
 import { useLocalVar } from "@/src/utils/style";
 import { cn } from "@/src/utils/cn";
 
-export default function Button({
+export interface ButtonProps extends BasePrimitiveProps{
+  label?:string
+}
+
+export function Button({
   label = "버튼",
   isEditing,
   className,
   ...props
-}: BasePrimitiveProps & {label?:string}) {
+}: ButtonProps) {
   return (
     <PrimitiveBase {...props} isEditing={isEditing}>
        <button
