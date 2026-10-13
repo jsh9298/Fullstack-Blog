@@ -1,219 +1,191 @@
-// "use client";
-
-// import React, { useState } from "react";
-// import { useDnDGuard } from "@/src/hooks/useDnDGuard";
-// import { CanvasItem, ItemData } from "@/src/components/dnd/CanvasItem";
-
-// const INITIAL_ITEMS: ItemData[] = [
-//   {
-//     id: "btn-1",
-//     label: "커스텀 버튼",
-//     type: "button",
-//     customCss: ".custom-btn { background-color: var(--local-bg, #10b981); border-radius: 9999px; }",
-//     localVars: { "--local-bg": "#8b5cf6" },
-//   },
-//   {
-//     id: "input-1",
-//     label: "텍스트 입력란",
-//     type: "input",
-//     customCss: ".custom-input { border-color: #f59e0b; background-color: #fffbeb; }",
-//   },
-//   {
-//     id: "slider-1",
-//     label: "볼륨 슬라이더",
-//     type: "range",
-//     customCss: "body { display: none; }", // 유저 악의적 CSS 테스트 (useScopedCss 가드에 의해 차단됨)
-//   },
-// ];
-
-// export default function BuilderCanvasPage() {
-//   const [items, setItems] = useState<ItemData[]>(INITIAL_ITEMS);
-//   const [isEditing, setIsEditing] = useState<boolean>(true);
-
-//   // DnD 최적화 및 엣지케이스 가드 훅 연결
-//   const { draggedIndex, dragOverIndex, bindDragSource, bindDropTarget } =
-//     useDnDGuard<ItemData>({
-//       items,
-//       onReorder: (newItems) => setItems(newItems),
-//     });
-
-//   return (
-//     <div className="min-h-screen bg-gray-100 p-8">
-//       <div className="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-md">
-//         {/* 상단 컨트롤 바 */}
-//         <div className="flex items-center justify-between pb-6 mb-6 border-b">
-//           <div>
-//             <h1 className="text-xl font-bold text-gray-800">
-//               Canvas DnD & Scoped CSS 테스트
-//             </h1>
-//             <p className="text-xs text-gray-500 mt-1">
-//               드래그 도중 <kbd className="px-1 bg-gray-200 rounded">ESC</kbd>를 누르면 드래그가 취소됩니다.
-//             </p>
-//           </div>
-
-//           <button
-//             onClick={() => setIsEditing(!isEditing)}
-//             className={`px-4 py-2 rounded font-medium text-sm transition-colors ${
-//               isEditing
-//                 ? "bg-amber-500 text-white hover:bg-amber-600"
-//                 : "bg-emerald-500 text-white hover:bg-emerald-600"
-//             }`}
-//           >
-//             모드 전환: {isEditing ? "에디팅 모드 ON" : "미리보기 모드 (실제 폼 조작)"}
-//           </button>
-//         </div>
-
-//         {/* 캔버스 렌더링 영역 */}
-//         <div className="min-h-[300px]">
-//           {items.map((item, index) => {
-//             const dragProps = isEditing ? bindDragSource(index) : {};
-//             const dropProps = isEditing ? bindDropTarget(index) : {};
-
-//             return (
-//               <CanvasItem
-//                 key={item.id}
-//                 item={item}
-//                 isEditing={isEditing}
-//                 dragProps={dragProps}
-//                 dropProps={dropProps}
-//                 isDragging={draggedIndex === index}
-//                 isDragOver={dragOverIndex === index}
-//               />
-//             );
-//           })}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-
-
-
-
-
-
 "use client";
 
-// import React, { useState } from "react";
-// import { useDnDGuard } from "@/src/hooks/useDnDGuard";
-// import { CanvasItem, ItemData } from "@/src/components/dnd/CanvasItem";
+import React, { useState } from "react";
+import {
+  insertItemToTree,
+  removeItemFromTree,
+  updateItemInTree,
+} from "@/src/utils/tree";
 
-import React, { useState, useRef } from "react";
-import { useDnDGuard } from "@/src/hooks/useDnDGuard";
-import { CanvasItem, ItemData } from "@/src/components/dnd/CanvasItem";
-import { SelectionOverlay } from "@/src/components/dnd/SelectionOverlay";
-import { PropertyPanel } from "@/src/components/dnd/PropertyPanel";
+import {ItemSchema,PrimitiveType} from "@/src/types/builder";
+import { CanvasItem } from "@/src/components/dnd/CanvasItem";
 
-const INITIAL_ITEMS: ItemData[] = [
-  {
-    id: "btn-1",
-    type: "button",
-    label:"",
-    props: { label: "제출하기" },
-    localVars: { "--local-bg": "#2563eb", "--local-radius": "6px" },
-  },
-  {
-    id: "input-1",
-    type: "input",
-    label:"",
-    props: { placeholder: "이메일을 입력하세요" },
-    localVars: { "--local-radius": "4px" },
-  },
+const PALETTE_ITEMS: { type: PrimitiveType; label: string }[] = [
+  { type: "container", label: "Container (박스/드롭존)" },
+  { type: "heading", label: "Heading (제목)" },
+  { type: "text", label: "Text (본문)" },
+  { type: "input", label: "Input (입력창)" },
+  { type: "options", label: "Option (체크/라디오)" },
+  { type: "select", label: "Select (드롭다운)" },
+  { type: "image", label: "Image (이미지)" },
+  { type: "divider", label: "Divider (구분선)" },
 ];
 
-export default function BuilderPage() {
-  const [items, setItems] = useState<ItemData[]>(INITIAL_ITEMS);
-  const [isEditing, setIsEditing] = useState<boolean>(true);
-  const [selectedId, setSelectedId] = useState<string | null>("btn-1");
-  const canvasRef = useRef<HTMLDivElement | null>(null);
+export default function NativeNestedDndPage() {
+  const [tree, setTree] = useState<ItemSchema[]>([
+    {
+      id: "container-1",
+      type: "container",
+      props: {},
+      children: [
+        {
+          id: "heading-1",
+          type: "heading",
+          props: { level: "h2", content: "중첩 컨테이너 내부 제목" },
+        },
+      ],
+    },
+  ]);
 
-  const { draggedIndex, dragOverIndex, bindDragSource, bindDropTarget } =
-    useDnDGuard<ItemData>({
-      items,
-      onReorder: (newItems) => setItems(newItems),
-    });
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const selectedItem = items.find((item) => item.id === selectedId) || null;
+  // 드래그 중인 데이터 추적 (팔레트 신규 추가 vs 캔버스 내부 이동)
+  const [draggedPaletteType, setDraggedPaletteType] = useState<PrimitiveType | null>(null);
+  const [draggedCanvasId, setDraggedCanvasId] = useState<string | null>(null);
 
-  const handleUpdateItem = (updatedItem: ItemData) => {
-    setItems((prev) =>
-      prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
-    );
+  // 사이드바에서 드래그 시작
+  const handlePaletteDragStart = (type: PrimitiveType) => {
+    setDraggedPaletteType(type);
+    setDraggedCanvasId(null);
   };
 
-  const handleUpdateStyle = (id: string, newVars: Record<string, string>) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, localVars: { ...item.localVars, ...newVars } }
-          : item
-      )
-    );
+  // 캔버스 내 아이템 드래그 시작
+  const handleCanvasDragStart = (e: React.DragEvent, id: string) => {
+    e.stopPropagation();
+    setDraggedCanvasId(id);
+    setDraggedPaletteType(null);
+  };
+
+  // 공통 드롭 로직 (Root 또는 특정 Container Target)
+  const handleDrop = (e: React.DragEvent, targetContainerId: string | null) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // 자기 자신 컨테이너 내부로 자기 자신을 드롭하는 순환 오류 방지
+    if (draggedCanvasId && draggedCanvasId === targetContainerId) {
+      return;
+    }
+
+    let updatedTree = [...tree];
+
+    if (draggedPaletteType) {
+      // 1. 팔레트에서 새 아이템을 드롭한 경우
+      const newItem: ItemSchema = {
+        id: `${draggedPaletteType}-${Date.now()}`,
+        type: draggedPaletteType,
+        props: getDefaultProps(draggedPaletteType),
+        ...(draggedPaletteType === "container" ? { children: [] } : {}),
+      };
+
+      updatedTree = insertItemToTree(updatedTree, targetContainerId, newItem);
+      setSelectedId(newItem.id);
+    } else if (draggedCanvasId) {
+      // 2. 기존 아이템을 다른 컨테이너(또는 루트)로 이동하는 경우
+      const { newTree, removedItem } = removeItemFromTree(updatedTree, draggedCanvasId);
+      if (removedItem) {
+        updatedTree = insertItemToTree(newTree, targetContainerId, removedItem);
+      }
+    }
+
+    setTree(updatedTree);
+    setDraggedPaletteType(null);
+    setDraggedCanvasId(null);
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
-      {/* 캔버스 영영 */}
-      <main className="flex-1 p-8 overflow-y-auto">
-        <div className="max-w-xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-xl font-bold text-gray-800">Builder Canvas</h1>
-            <button
-              onClick={() => setIsEditing(!isEditing)}
-              className="px-3 py-1.5 text-xs bg-amber-500 text-white rounded font-medium"
+    <div className="flex flex-col h-screen bg-gray-100 overflow-hidden select-none">
+      <header className="h-14 bg-white border-b px-6 flex items-center justify-between">
+        <h1 className="font-bold text-gray-800 text-base">
+          Native Pure-React Nested Container DnD Engine
+        </h1>
+        <span className="text-xs text-gray-500">외부 라이브러리 없음 (No Zustand / No dnd-kit)</span>
+      </header>
+
+      <div className="flex flex-1 overflow-hidden">
+        {/* 사이드바 팔레트 */}
+        <aside className="w-64 bg-white border-r p-4 flex flex-col gap-2">
+          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+            Palette
+          </h2>
+          {PALETTE_ITEMS.map((item) => (
+            <div
+              key={item.type}
+              draggable
+              onDragStart={() => handlePaletteDragStart(item.type)}
+              className="p-3 bg-gray-50 border border-gray-200 rounded-lg cursor-grab active:cursor-grabbing hover:border-blue-400 hover:bg-blue-50 transition-all text-sm font-medium text-gray-700"
             >
-              모드: {isEditing ? "에디팅 모드 ON" : "미리보기 모드"}
-            </button>
-          </div>
+              {item.label}
+            </div>
+          ))}
+        </aside>
 
+        {/* 메인 캔버스 드롭존 (Root Container) */}
+        <main
+          className="flex-1 p-8 overflow-y-auto bg-gray-100 flex justify-center"
+          onClick={() => setSelectedId(null)}
+        >
           <div
-            ref={canvasRef}
-            onClick={() => setSelectedId(null)}
-            className="relative bg-white p-6 rounded-xl shadow-md min-h-[400px]"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => handleDrop(e, null)} // null은 Root 레벨을 의미함
+            className="w-full max-w-3xl min-h-[650px] bg-white border-2 border-dashed border-gray-300 rounded-xl p-6 shadow-sm flex flex-col gap-2"
           >
-            {items.map((item, index) => {
-              const dragProps = isEditing ? bindDragSource(index) : {};
-              const dropProps = isEditing ? bindDropTarget(index) : {};
-
-              return (
+            {tree.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                여기로 요소를 드래그하세요
+              </div>
+            ) : (
+              tree.map((item) => (
                 <CanvasItem
                   key={item.id}
                   item={item}
-                  isEditing={isEditing}
-                  isSelected={selectedId === item.id}
-                  onSelect={(id) => setSelectedId(id)}
-                  dragProps={dragProps}
-                  dropProps={dropProps}
-                  isDragging={draggedIndex === index}
-                  isDragOver={dragOverIndex === index}
+                  selectedId={selectedId}
+                  onSelect={setSelectedId}
+                  onRemove={(id) => {
+                    const { newTree } = removeItemFromTree(tree, id);
+                    setTree(newTree);
+                    setSelectedId(null);
+                  }}
+                  onDropToContainer={handleDrop}
+                  onCanvasDragStart={handleCanvasDragStart}
                 />
-              );
-            })}
-
-            {/* 선택 상자 오버레이 가상 레이어 */}
-            {isEditing && (
-              <SelectionOverlay
-                selectedId={selectedId}
-                canvasRef={canvasRef}
-                onUpdateStyle={handleUpdateStyle}
-              />
+              ))
             )}
           </div>
-        </div>
-      </main>
+        </main>
 
-      {/* 우측 속성 패널 */}
-      {isEditing && (
-        <PropertyPanel
-          selectedItem={selectedItem}
-          onUpdateItem={handleUpdateItem}
-          onDeleteItem={(id) => {
-            setItems((prev) => prev.filter((item) => item.id !== id));
-            setSelectedId(null);
-          }}
-        />
-      )}
+        {/* 속성 패널 */}
+        <aside className="w-72 bg-white border-l p-4">
+          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
+            Property Panel
+          </h2>
+          {selectedId ? (
+            <div className="text-xs font-mono text-gray-600">
+              Selected Item: <span className="font-bold text-blue-600">{selectedId}</span>
+            </div>
+          ) : (
+            <div className="text-xs text-gray-400">선택된 요소가 없습니다.</div>
+          )}
+        </aside>
+      </div>
     </div>
   );
+}
+
+function getDefaultProps(type: PrimitiveType): Record<string, any> {
+  switch (type) {
+    case "heading":
+      return { level: "h2", content: "새 타이틀" };
+    case "text":
+      return { content: "새로운 본문 텍스트입니다." };
+    case "input":
+      return { placeholder: "내용을 입력하세요..." };
+    case "options":
+      return { label: "선택 옵션", variant: "checkbox" };
+    case "select":
+      return { placeholder: "선택해 주세요" };
+    case "image":
+      return { src: "https://via.placeholder.com/600x200" };
+    default:
+      return {};
+  }
 }
