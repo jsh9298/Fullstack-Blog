@@ -1,4 +1,3 @@
-import { Sidebar } from "@/src/widgets/admin-env/ui/Sidebar";
 
 export default function AdminLayout({
   children,
@@ -7,7 +6,7 @@ export default function AdminLayout({
 }) {
   return (
     <div className="flex">
-      <Sidebar />
+       <p>작성중..</p>
       <main className="flex-1 bg-bg-l2 p-10">{children}</main>
     </div>
   );
