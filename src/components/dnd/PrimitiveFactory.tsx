@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import type React from "react";
 import { ItemSchema, PrimitiveType } from "@/src/types/builder";
 import {Button,Container,Image,Input,Select,Text,TextArea,Heading,Options,Divider} from "@/src/components/primitives";
 

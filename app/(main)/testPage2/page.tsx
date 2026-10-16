@@ -144,10 +144,11 @@ export default function NativeNestedDndPage() {
                     const { newTree } = removeItemFromTree(tree, id);
                     setTree(newTree);
                     setSelectedId(null);
-                  }}
+                  } }
                   onDropToContainer={handleDrop}
-                  onCanvasDragStart={handleCanvasDragStart}
-                />
+                  onCanvasDragStart={handleCanvasDragStart} itemIndex={0} parentId={null} onDropWithPosition={function (e: React.DragEvent, targetParentId: string | null, targetIndex: number): void {
+                    throw new Error("Function not implemented.");
+                  } }                />
               ))
             )}
           </div>

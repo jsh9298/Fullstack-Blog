@@ -56,3 +56,241 @@ export interface ItemSchema<TProps = Record<string, any>> {
   localVars?: Record<string, any>; //커스텀 css (ui 핸들러)
   children?: ItemSchema[]; //하위 아이템 저장용. (트리구조 저장을 위함)
 }
+
+export type ControlType =
+  | "text"
+  | "textarea"
+  | "select"
+  | "color"
+  | "number"
+  | "boolean";
+
+export interface PropertyFieldSchema {
+  key: string; // props 또는 localVars의 key 명칭
+  label: string; // 화면에 표시될 라벨명
+  controlType: ControlType; // 컨트롤러 타입
+  target: "props" | "localVars"; // 데이터가 저장되는 위치
+  options?: { label: string; value: string }[]; // select 타입일 때 옵션 목록
+  placeholder?: string;
+}
+
+export const PROPERTY_SCHEMAS: Record<PrimitiveType, PropertyFieldSchema[]> = {
+  container: [
+    {
+      key: "display",
+      label: "디스플레이 모드",
+      controlType: "select",
+      target: "localVars",
+      options: [
+        { label: "Flex", value: "flex" },
+        { label: "Grid", value: "grid" },
+        { label: "Block", value: "block" },
+      ],
+    },
+    {
+      key: "flexDirection",
+      label: "Flex 방향",
+      controlType: "select",
+      target: "localVars",
+      options: [
+        { label: "Column (세로)", value: "column" },
+        { label: "Row (가로)", value: "row" },
+      ],
+    },
+    {
+      key: "gap",
+      label: "간격 (gap)",
+      controlType: "text",
+      target: "localVars",
+      placeholder: "16px",
+    },
+    {
+      key: "padding",
+      label: "패딩 (padding)",
+      controlType: "text",
+      target: "localVars",
+      placeholder: "16px",
+    },
+    {
+      key: "bg",
+      label: "배경색 (bg)",
+      controlType: "color",
+      target: "localVars",
+    },
+  ],
+
+  heading: [
+    {
+      key: "content",
+      label: "제목 내용",
+      controlType: "text",
+      target: "props",
+    },
+    {
+      key: "level",
+      label: "태그 레벨",
+      controlType: "select",
+      target: "props",
+      options: [
+        { label: "H1", value: "h1" },
+        { label: "H2", value: "h2" },
+        { label: "H3", value: "h3" },
+        { label: "H4", value: "h4" },
+        { label: "H5", value: "h5" },
+        { label: "H6", value: "h6" },
+      ],
+    },
+    {
+      key: "color",
+      label: "글자 색상",
+      controlType: "color",
+      target: "localVars",
+    },
+    {
+      key: "fontSize",
+      label: "폰트 크기",
+      controlType: "text",
+      target: "localVars",
+      placeholder: "24px",
+    },
+  ],
+
+  text: [
+    {
+      key: "content",
+      label: "본문 내용",
+      controlType: "textarea",
+      target: "props",
+    },
+    {
+      key: "color",
+      label: "글자 색상",
+      controlType: "color",
+      target: "localVars",
+    },
+    {
+      key: "fontSize",
+      label: "폰트 크기",
+      controlType: "text",
+      target: "localVars",
+      placeholder: "16px",
+    },
+  ],
+
+  input: [
+    {
+      key: "placeholder",
+      label: "Placeholder",
+      controlType: "text",
+      target: "props",
+    },
+    {
+      key: "type",
+      label: "Input 타입",
+      controlType: "select",
+      target: "props",
+      options: [
+        { label: "Text", value: "text" },
+        { label: "Password", value: "password" },
+        { label: "Email", value: "email" },
+        { label: "Number", value: "number" },
+      ],
+    },
+    {
+      key: "width",
+      label: "너비 (width)",
+      controlType: "text",
+      target: "localVars",
+      placeholder: "100%",
+    },
+  ],
+
+  options: [
+    {
+      key: "label",
+      label: "라벨 텍스트",
+      controlType: "text",
+      target: "props",
+    },
+    {
+      key: "variant",
+      label: "옵션 형태",
+      controlType: "select",
+      target: "props",
+      options: [
+        { label: "Checkbox", value: "checkbox" },
+        { label: "Radio", value: "radio" },
+        { label: "Switch", value: "switch" },
+      ],
+    },
+    {
+      key: "defaultChecked",
+      label: "기본 체크 여부",
+      controlType: "boolean",
+      target: "props",
+    },
+  ],
+
+  select: [
+    {
+      key: "placeholder",
+      label: "Placeholder",
+      controlType: "text",
+      target: "props",
+    },
+    {
+      key: "width",
+      label: "너비 (width)",
+      controlType: "text",
+      target: "localVars",
+      placeholder: "100%",
+    },
+  ],
+
+  image: [
+    {
+      key: "src",
+      label: "이미지 URL",
+      controlType: "text",
+      target: "props",
+    },
+    {
+      key: "alt",
+      label: "대체 텍스트 (Alt)",
+      controlType: "text",
+      target: "props",
+    },
+    {
+      key: "objectFit",
+      label: "Object Fit",
+      controlType: "select",
+      target: "props",
+      options: [
+        { label: "Cover", value: "cover" },
+        { label: "Contain", value: "contain" },
+        { label: "Fill", value: "fill" },
+      ],
+    },
+  ],
+
+  divider: [
+    {
+      key: "orientation",
+      label: "방향",
+      controlType: "select",
+      target: "props",
+      options: [
+        { label: "가로 (Horizontal)", value: "horizontal" },
+        { label: "세로 (Vertical)", value: "vertical" },
+      ],
+    },
+    {
+      key: "borderColor",
+      label: "선 색상",
+      controlType: "color",
+      target: "localVars",
+    },
+  ],
+  button: [],
+  textarea: []
+};
