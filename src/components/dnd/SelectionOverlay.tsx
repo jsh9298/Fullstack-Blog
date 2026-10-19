@@ -1,5 +1,6 @@
 "use client";
 
+import { PROPERTY_SCHEMAS } from "@/src/types/builder";
 import React, { useEffect, useState } from "react";
 
 interface SelectionOverlayProps {
@@ -42,7 +43,18 @@ export function SelectionOverlay({ selectedId, onDelete,  canvasRef, onUpdateSty
   }, [selectedId]);
 
   if (!selectedId || !rect) return null;
+  /*
+    selectedId에 해당하는 ItemSchema 데이터만
 
+    값이 변경될 때 상위에서는 동일한 dispatch({ type: "UPDATE_LOCAL_VARS", ... }) 액션을 발행(Write)
+
+    PROPERTY_SCHEMAS[type]에서 핵심 퀵 옵션(예: flexDirection, gap, color 등)만 filter하여 가져와 렌더링
+    const quickFields = schema.filter((field) =>
+    ["flexDirection", "gap", "alignItems"].includes(field.key)
+    
+    에..그럼 Overlay용 Control컴포넌트 따로 만들어주고, 이 파일에서는 오버레이 유닛이 잘 띄워지는지 부터 해야함
+  );
+  */
   return (
     <div
       style={{

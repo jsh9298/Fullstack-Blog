@@ -63,7 +63,8 @@ export type ControlType =
   | "select"
   | "color"
   | "number"
-  | "boolean";
+  | "boolean"
+  | "range";
 
 export interface PropertyFieldSchema {
   key: string; // props 또는 localVars의 key 명칭
@@ -72,6 +73,10 @@ export interface PropertyFieldSchema {
   target: "props" | "localVars"; // 데이터가 저장되는 위치
   options?: { label: string; value: string }[]; // select 타입일 때 옵션 목록
   placeholder?: string;
+  min?: number; // range 최솟값
+  max?: number; // range 최댓값
+  step?: number; // range 증감 단위
+  unit?: string; // "px", "rem" 등 단위
 }
 
 export const PROPERTY_SCHEMAS: Record<PrimitiveType, PropertyFieldSchema[]> = {
@@ -99,17 +104,23 @@ export const PROPERTY_SCHEMAS: Record<PrimitiveType, PropertyFieldSchema[]> = {
     },
     {
       key: "gap",
-      label: "간격 (gap)",
-      controlType: "text",
+      label: "요소 간격 (Gap)",
+      controlType: "range",
       target: "localVars",
-      placeholder: "16px",
+      min: 0,
+      max: 64,
+      step: 2,
+      unit: "px",
     },
     {
       key: "padding",
-      label: "패딩 (padding)",
-      controlType: "text",
+      label: "내부 여백 (Padding)",
+      controlType: "range",
       target: "localVars",
-      placeholder: "16px",
+      min: 0,
+      max: 64,
+      step: 4,
+      unit: "px",
     },
     {
       key: "bg",

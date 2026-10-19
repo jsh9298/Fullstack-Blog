@@ -113,3 +113,29 @@ export function filterTreeByType(
       return item;
     });
 }
+
+
+export function updateLocalVarsInTree(
+  tree: ItemSchema[],
+  id: string,
+  newLocalVars: Record<string, any>
+): ItemSchema[] {
+  return tree.map((item) => {
+    if (item.id === id) {
+      return {
+        ...item,
+        localVars: {
+          ...item.localVars,
+          ...newLocalVars,
+        },
+      };
+    }
+    if (item.children && item.children.length > 0) {
+      return {
+        ...item,
+        children: updateLocalVarsInTree(item.children, id, newLocalVars),
+      };
+    }
+    return item;
+  });
+}

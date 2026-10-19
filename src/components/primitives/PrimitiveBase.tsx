@@ -9,12 +9,14 @@ import { cn } from "@/src/utils/cn";
 export interface PrimitiveBaseProps extends BasePrimitiveProps {
   children: React.ReactNode;
   as?: React.ElementType;
+  style?: React.CSSProperties;
 }
 
 export function PrimitiveBase({
   id,
   customCss,
   localVars = {},
+  style = {},
   children,
   className = "",
   isEditing = false,
@@ -32,7 +34,13 @@ export function PrimitiveBase({
   return (
     <Component
       {...{ [scopeAttributeName]: scopeAttributeValue }}
-      style={cssVarsStyle}
+      style={{...cssVarsStyle,...style}}
+      onClick={(e: React.MouseEvent) => {
+        if (isEditing && onSelect && id) {
+          e.stopPropagation(); // 부모 컨테이너로 버블링 방지
+          onSelect(id,e);
+        }
+      }}
       className={cn("primitive-root relative group", className)}
     >
       {isValid && sanitizedCss && (
