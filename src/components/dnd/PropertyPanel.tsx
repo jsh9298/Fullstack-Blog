@@ -2,7 +2,7 @@
 
 import React from "react";
 import { ItemSchema } from "@/src/types/builder";
-import { PROPERTY_SCHEMAS } from "@/src/types/builder";
+import { PROPERTY_SCHEMAS } from "@/src/types/properties";
 import { PropertyControl } from "./PropertyControl";
 
 interface PropertyPanelProps {

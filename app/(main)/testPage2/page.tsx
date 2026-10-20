@@ -6,6 +6,9 @@ import { ItemSchema, PrimitiveType } from "@/src/types/builder";
 import { builderReducer, BuilderState } from "@/src/components/dnd/HistoryReduser";
 import { CanvasItem } from "@/src/components/dnd/CanvasItem";
 import { PropertyPanel } from "@/src/components/dnd/PropertyPanel";
+import { useCanvasHotkeys } from "@/src/hooks/useCanvasHotKey";
+import { SelectionOverlay } from "@/src/components/dnd/SelectionOverlay";
+import { findParentIdInTree,findItemInTree  } from "@/src/utils/tree";
 
 
 const PALETTE_ITEMS: { type: PrimitiveType; label: string }[] = [
@@ -19,33 +22,31 @@ const PALETTE_ITEMS: { type: PrimitiveType; label: string }[] = [
   { type: "divider", label: "Divider (구분선)" },
 ];
 
+function getDefaultProps(type: PrimitiveType): Record<string, any> {
+  switch (type) {
+    case "heading":
+      return { level: "h2", content: "새 타이틀" };
+    case "text":
+      return { content: "새로운 본문 텍스트입니다." };
+    case "input":
+      return { placeholder: "내용을 입력하세요..." };
+    case "options":
+      return { label: "선택 옵션", variant: "checkbox" };
+    case "select":
+      return { placeholder: "선택해 주세요" };
+    case "image":
+      return { src: "https://via.placeholder.com/600x200" };
+    default:
+      return {};
+  }
+}
+
 const initialTree: ItemSchema[] = [
   {
     id: "container-1",
     type: "container",
     props: {},
-    children: [
-      {
-        id: "heading-1",
-        type: "heading",
-        props: { level: "h2", content: "가이드선 위치 이동 테스트" },
-      },
-      {
-        id: "heading-2",
-        type: "heading",
-        props: { level: "h3", content: "FlexDirection 변경 테스트" },
-      },
-      {
-        id: "divider-1",
-        type: "divider",
-        props: { orientation: "horizontal" },
-      },
-      {
-        id: "text-1",
-        type: "text",
-        props: { content: "우측 PropertyPanel에서 Flex 방향을 row로 바꿔보세요." },
-      },
-    ],
+    children: [],
   },
 ];
 
@@ -63,19 +64,11 @@ export default function NativeDndPage() {
   const [draggedPaletteType, setDraggedPaletteType] = useState<PrimitiveType | null>(null);
   const [draggedCanvasId, setDraggedCanvasId] = useState<string | null>(null);
 
-  const findSelectedItem = (items: ItemSchema[], id: string | null): ItemSchema | null => {
-    if (!id) return null;
-    for (const item of items) {
-      if (item.id === id) return item;
-      if (item.children) {
-        const found = findSelectedItem(item.children, id);
-        if (found) return found;
-      }
-    }
-    return null;
-  };
+  useCanvasHotkeys({ dispatch, selectedId });
 
-  const selectedItem = findSelectedItem(tree, selectedId);
+  const selectedItem = selectedId != null ?findItemInTree(tree, selectedId):null;
+
+  const parentId = findParentIdInTree(tree, selectedId);
 
   const handlePaletteDragStart = (type: PrimitiveType) => {
     setDraggedPaletteType(type);
@@ -180,20 +173,38 @@ export default function NativeDndPage() {
                 여기로 요소를 드래그하세요
               </div>
             ) : (
-              tree.map((item, idx) => (
-                <CanvasItem
-                      key={item.id}
-                      item={item}
-                      itemIndex={idx}
-                      parentId={null}
-                      selectedId={selectedId}
-                      onSelect={(id) => dispatch({ type: "SELECT_ITEM", payload: id })}
-                      onRemove={(id) => dispatch({ type: "REMOVE_ITEM", payload: id })}
-                      onDropWithPosition={handleDropWithPosition}
-                      onCanvasDragStart={handleCanvasDragStart} 
-                />
-              ))
+              tree.map((item, idx) => {
+                const currentParentId = findParentIdInTree(tree, item.id);
+                return(
+                  <CanvasItem
+                        key={item.id}
+                        item={item}
+                        itemIndex={idx}
+                        parentId={currentParentId}
+                        selectedId={selectedId}
+                        onSelect={(id) => dispatch({ type: "SELECT_ITEM", payload: id })}
+                        onRemove={(id) => dispatch({ type: "REMOVE_ITEM", payload: id })}
+                        onDropWithPosition={handleDropWithPosition}
+                        onCanvasDragStart={handleCanvasDragStart} 
+                  />
+                );
+              })
             )}
+
+            <SelectionOverlay
+              selectedId={selectedId}
+              selectedItem={selectedItem}
+              parentId={parentId}
+              onSelectParent={(id) => dispatch({ type: "SELECT_ITEM", payload: id })}
+              onDuplicate={(id) => dispatch({ type: "DUPLICATE_ITEM", payload: id })}
+              onRemove={(id) => {
+                dispatch({ type: "REMOVE_ITEM", payload: id });
+              }}
+              onUpdateLocalVars={(id, localVars) => 
+                dispatch({ type: "UPDATE_LOCAL_VARS", payload: { id, localVars } })
+              }
+            />
+
           </div>
         </main>
 
@@ -208,23 +219,4 @@ export default function NativeDndPage() {
       </div>
     </div>
   );
-}
-
-function getDefaultProps(type: PrimitiveType): Record<string, any> {
-  switch (type) {
-    case "heading":
-      return { level: "h2", content: "새 타이틀" };
-    case "text":
-      return { content: "새로운 본문 텍스트입니다." };
-    case "input":
-      return { placeholder: "내용을 입력하세요..." };
-    case "options":
-      return { label: "선택 옵션", variant: "checkbox" };
-    case "select":
-      return { placeholder: "선택해 주세요" };
-    case "image":
-      return { src: "https://via.placeholder.com/600x200" };
-    default:
-      return {};
-  }
 }

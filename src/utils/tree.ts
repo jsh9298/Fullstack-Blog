@@ -1,4 +1,36 @@
 import { ItemSchema, PrimitiveType, } from "../types/builder";
+
+const itemCache = new WeakMap<ItemSchema[], Map<string, ItemSchema>>();
+const parentCache = new WeakMap<ItemSchema[], Map<string, string | null>>();
+
+function ensureTreeIndex(tree: ItemSchema[]): {
+  itemMap: Map<string, ItemSchema>;
+  parentMap: Map<string, string | null>;
+} {
+  if (itemCache.has(tree) && parentCache.has(tree)) {
+    return { itemMap: itemCache.get(tree)!, parentMap: parentCache.get(tree)! };
+  }
+
+  const itemMap = new Map<string, ItemSchema>();
+  const parentMap = new Map<string, string | null>();
+
+  function traverse(nodes: ItemSchema[], parentId: string | null = null) {
+    for (const node of nodes) {
+      itemMap.set(node.id, node);
+      parentMap.set(node.id, parentId);
+      if (node.children && node.children.length > 0) {
+        traverse(node.children, node.id);
+      }
+    }
+  }
+  traverse(tree);
+
+  itemCache.set(tree, itemMap);
+  parentCache.set(tree, parentMap);
+
+  return { itemMap, parentMap };
+}
+
 export function insertItemToTree(tree:ItemSchema[],parentId: string | null,newItem: ItemSchema,
   targetIndex?: number):ItemSchema[]{
     if(!parentId){
@@ -79,39 +111,27 @@ export function updateItemInTree(
 }
 
 
-
-export function findItemInTree(tree: ItemSchema[],
-  id: string
-): ItemSchema | null {
-  const found = tree.find((item) => item.id === id);
-  if (found) return found; // 찾았다면 하위 자식을 보지 않고 즉시 반환(조기 종료)
-
-  // 2. 현재 레벨에 없다면, 자식 노드들 속으로 깊숙이 파고들어 탐색합니다.
-  for (const item of tree) {
-    if (item.children && item.children.length > 0) {
-      const childFound = findItemInTree(item.children, id);
-      if (childFound) return childFound; // 자식의 자식 엘리먼트에서 찾았다면 반환
-    }
-  }
-
-  return null; // 끝내 찾지 못했다면 null 반환
+export function findItemInTree(tree: ItemSchema[], id: string): ItemSchema | null {
+  const { itemMap } = ensureTreeIndex(tree);
+  return itemMap.get(id) || null;
 }
+
+export function findParentIdInTree(tree: ItemSchema[], targetId: string | null): string | null {
+  if (!targetId) return null;
+  const { parentMap } = ensureTreeIndex(tree);
+  return parentMap.get(targetId) || null;
+}
+
 
 export function filterTreeByType(
   tree: ItemSchema[],
   type: PrimitiveType
 ): ItemSchema[] {
   return tree
-    .filter((item) => item.type === type) // 조건에 맞는 노드만 필터링
     .map((item) => {
-      if (item.children && item.children.length > 0) {
-        return {
-          ...item,
-          children: filterTreeByType(item.children, type), // 자식들도 똑같이 필터링
-        };
-      }
-      return item;
-    });
+       const filteredChildren = item.children && item.children.length > 0? filterTreeByType(item.children, type) : [];
+       return { ...item, children: filteredChildren };
+    }).filter((item) => item.type === type || (item.children && item.children.length > 0) ) // 조건에 맞는 노드만 필터링;
 }
 
 
@@ -139,3 +159,4 @@ export function updateLocalVarsInTree(
     return item;
   });
 }
+

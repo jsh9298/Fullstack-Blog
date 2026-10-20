@@ -1,23 +1,37 @@
 "use client";
 
-import { PROPERTY_SCHEMAS } from "@/src/types/builder";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { FloatingOverlayToolbar } from "./FloatingOverlayToolbar";
 
 interface SelectionOverlayProps {
   selectedId: string | null;
-  onDelete?: (id: string) => void;
-   canvasRef: React.RefObject<HTMLDivElement | null>;
-    onUpdateStyle: (id: string, newStyles: Record<string, string>) => void;
+  selectedItem: any;
+  parentId: string | null;
+  onSelectParent: (parentId: string) => void;
+  onDuplicate: (id: string) => void;
+  onRemove: (id: string) => void;
+  onUpdateLocalVars: (id: string, localVars: Record<string, any>) => void;
 }
-interface Rect {
-  top: number;
-  left: number;
-  width: number;
-  height: number;
-}
-export function SelectionOverlay({ selectedId, onDelete,  canvasRef, onUpdateStyle,}: SelectionOverlayProps) {
-  const [rect, setRect] = useState<DOMRect | null>(null);
 
+export function SelectionOverlay({
+  selectedId,
+  selectedItem,
+  parentId,
+  onSelectParent,
+  onDuplicate,
+  onRemove,
+  onUpdateLocalVars
+}: SelectionOverlayProps) {
+  const [rect, setRect] = useState<DOMRect | null>(null);
+  const isDraggingRef = useRef<"resize" | "rotate" | null>(null);
+  const startPosRef = useRef<{ x: number; y: number; width: number; height: number; rotate: number }>({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+    rotate: 0,
+  });
+  // 선택된 아이템의 DOM 위치 실시간 추적
   useEffect(() => {
     if (!selectedId) {
       setRect(null);
@@ -25,202 +39,146 @@ export function SelectionOverlay({ selectedId, onDelete,  canvasRef, onUpdateSty
     }
 
     const updateRect = () => {
-      // data-component-id 속성을 가진 DOM 요소를 추적
-      const element = document.querySelector(`[data-component-id="${selectedId}"]`);
-      if (element) {
-        setRect(element.getBoundingClientRect());
+      const el = document.querySelector(`[data-item-id="${selectedId}"]`);
+      if (el) {
+        setRect(el.getBoundingClientRect());
       }
     };
 
     updateRect();
-    window.addEventListener("resize", updateRect);
     window.addEventListener("scroll", updateRect, true);
+    window.addEventListener("resize", updateRect);
 
     return () => {
-      window.removeEventListener("resize", updateRect);
       window.removeEventListener("scroll", updateRect, true);
-    };
-  }, [selectedId]);
-
-  if (!selectedId || !rect) return null;
-  /*
-    selectedId에 해당하는 ItemSchema 데이터만
-
-    값이 변경될 때 상위에서는 동일한 dispatch({ type: "UPDATE_LOCAL_VARS", ... }) 액션을 발행(Write)
-
-    PROPERTY_SCHEMAS[type]에서 핵심 퀵 옵션(예: flexDirection, gap, color 등)만 filter하여 가져와 렌더링
-    const quickFields = schema.filter((field) =>
-    ["flexDirection", "gap", "alignItems"].includes(field.key)
-    
-    에..그럼 Overlay용 Control컴포넌트 따로 만들어주고, 이 파일에서는 오버레이 유닛이 잘 띄워지는지 부터 해야함
-  );
-  */
-  return (
-    <div
-      style={{
-        position: "fixed",
-        top: rect.top,
-        left: rect.left,
-        width: rect.width,
-        height: rect.height,
-        pointerEvents: "none", // 클릭 이벤트를 뚫고 아래 캔버스로 전달
-      }}
-      className="z-50 border-2 border-blue-500 transition-all duration-75"
-    >
-      {/* 컴포넌트 태그 라벨 & 삭제 버튼 */}
-      <div className="absolute -top-6 left-0 flex items-center gap-1 bg-blue-500 px-2 py-0.5 text-[11px] text-white rounded-t pointer-events-auto">
-        <span>{selectedId}</span>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete?.(selectedId);
-          }}
-          className="ml-1 hover:text-red-200"
-        >
-          ✕
-        </button>
-      </div>
-    </div>
-  );
-}
-
-
-/*
-  const [rect, setRect] = useState<Rect | null>(null);
-  const isResizing = useRef(false);
-
-  // 1. 선택된 타겟 DOM의 위치 및 크기 추적
-  const updateRect = useCallback(() => {
-    if (!selectedId || !canvasRef.current) {
-      setRect(null);
-      return;
-    }
-
-    // data-component-id 속성으로 타겟 DOM 검색
-    const targetEl = canvasRef.current.querySelector(
-      `[data-component-id="${selectedId}"]`
-    ) as HTMLElement;
-
-    if (!targetEl) {
-      setRect(null);
-      return;
-    }
-
-    const canvasRect = canvasRef.current.getBoundingClientRect();
-    const targetRect = targetEl.getBoundingClientRect();
-
-    // 캔버스 상대 좌표 계산
-    setRect({
-      top: targetRect.top - canvasRect.top,
-      left: targetRect.left - canvasRect.left,
-      width: targetRect.width,
-      height: targetRect.height,
-    });
-  }, [selectedId, canvasRef]);
-
-  // DOM 변형 및 창 크기 변경 시 오버레이 위치 재계산
-  useEffect(() => {
-    updateRect();
-    window.addEventListener("resize", updateRect);
-    window.addEventListener("scroll", updateRect, true);
-
-    return () => {
       window.removeEventListener("resize", updateRect);
-      window.removeEventListener("scroll", updateRect, true);
     };
-  }, [updateRect]);
+  }, [selectedId, selectedItem]);
 
-  // 2. 리사이즈 핸들 드래그 이벤트 처리 (우측 하단 SE 핸들 예시)
-  const handleResizeStart = (e: React.MouseEvent, direction: string) => {
-    e.stopPropagation();
+  // ───────── 크기 조절(Resize) 시작 ─────────
+  const handleResizeStart = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!selectedId || !rect) return;
+    e.stopPropagation();
+    if (!rect) return;
 
-    isResizing.current = true;
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const startWidth = rect.width;
-    const startHeight = rect.height;
-
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      if (!isResizing.current) return;
-
-      const deltaX = moveEvent.clientX - startX;
-      const deltaY = moveEvent.clientY - startY;
-
-      let newWidth = startWidth;
-      let newHeight = startHeight;
-
-      if (direction.includes("e")) newWidth = Math.max(30, startWidth + deltaX);
-      if (direction.includes("s")) newHeight = Math.max(20, startHeight + deltaY);
-
-      // 로컬 CSS 변수 형태나 px 스타일 업데이트
-      onUpdateStyle(selectedId, {
-        "--local-width": `${Math.round(newWidth)}px`,
-        "--local-height": `${Math.round(newHeight)}px`,
-      });
-
-      // 즉시 오버레이 위치 반영
-      setRect((prev) => prev ? { ...prev, width: newWidth, height: newHeight } : null);
-    };
-
-    const handleMouseUp = () => {
-      isResizing.current = false;
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+    isDraggingRef.current = "resize";
+    startPosRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      width: rect.width,
+      height: rect.height,
+      rotate: 0,
     };
 
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
   };
 
-  if (!rect || !selectedId) return null;
+  // ───────── 회전(Rotate) 시작 ─────────
+  const handleRotateStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!rect) return;
+
+    isDraggingRef.current = "rotate";
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    // 현재 마우스와 박스 중심점 간의 각도 계산
+    const currentAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
+    const existingRotate = parseInt(selectedItem?.localVars?.rotate || "0", 10);
+
+    startPosRef.current = {
+      x: centerX,
+      y: centerY,
+      width: 0,
+      height: 0,
+      rotate: existingRotate - currentAngle,
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
+
+  // ───────── 드래그 중 계산 및 반영 ─────────
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDraggingRef.current || !selectedId) return;
+
+    if (isDraggingRef.current === "resize") {
+      const dx = e.clientX - startPosRef.current.x;
+      const dy = e.clientY - startPosRef.current.y;
+      const newWidth = Math.max(50, startPosRef.current.width + dx);
+      const newHeight = Math.max(30, startPosRef.current.height + dy);
+
+      // 실시간 localVars 업데이트 (width, height)
+      onUpdateLocalVars(selectedId, {
+        ...selectedItem?.localVars,
+        width: `${Math.round(newWidth)}px`,
+        height: `${Math.round(newHeight)}px`,
+      });
+    } else if (isDraggingRef.current === "rotate") {
+      const centerX = startPosRef.current.x;
+      const centerY = startPosRef.current.y;
+      const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
+      const finalRotate = Math.round(angle + startPosRef.current.rotate);
+
+      // 실시간 localVars 업데이트 (rotate)
+      onUpdateLocalVars(selectedId, {
+        ...selectedItem?.localVars,
+        rotate: `${finalRotate}deg`,
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    isDraggingRef.current = null;
+    window.removeEventListener("mousemove", handleMouseMove);
+    window.removeEventListener("mouseup", handleMouseUp);
+  };
+
+  if (!selectedId || !rect) return null;
 
   return (
-    <div
-      className="absolute pointer-events-none border-2 border-blue-500 z-50 transition-all duration-75"
-      style={{
-        top: `${rect.top}px`,
-        left: `${rect.left}px`,
-        width: `${rect.width}px`,
-        height: `${rect.height}px`,
-      }}
-    >
-      {/* 컴포넌트 라벨 & 크기 배지 } */ 
-//       <div className="absolute -top-6 left-0 bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded-t font-mono select-none whitespace-nowrap">
-//         {Math.round(rect.width)}px × {Math.round(rect.height)}px
-//       </div>
+    <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden">
+      {/* 1. 선택된 컴포넌트를 감싸는 파란색 아웃라인 박스 */}
+      <div
+        style={{
+          top: `${rect.top + window.scrollY}px`,
+          left: `${rect.left + window.scrollX}px`,
+          width: `${rect.width}px`,
+          height: `${rect.height}px`,
+          transform: selectedItem?.localVars?.rotate ? `rotate(${selectedItem.localVars.rotate})` : undefined,
+          transformOrigin: "center center",
+        }}
+        className="absolute border-2 border-blue-500 bg-blue-500/5 pointer-events-none rounded transition-none"
+      >
+        <div
+          onMouseDown={handleRotateStart}
+          className="absolute -top-7 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-2 border-blue-500 rounded-full cursor-grab active:cursor-grabbing pointer-events-auto shadow flex items-center justify-center text-[9px] text-blue-600 font-bold"
+          title="드래그하여 회전"
+        >
+          ↻
+        </div>
+        {/* 모서리 리사이즈 핸들 (추후 크기 조절 고도화 시 활용) */}
+        <div className="absolute -top-1 -left-1 w-2 h-2 bg-white border border-blue-500 rounded-full" />
+        <div className="absolute -top-1 -right-1 w-2 h-2 bg-white border border-blue-500 rounded-full" />
+        <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-white border border-blue-500 rounded-full" />
+        <div
+          onMouseDown={handleResizeStart}
+          className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border-2 border-white rounded-full cursor-se-resize pointer-events-auto shadow"
+          title="드래그하여 크기 조절"
+        />
+      </div>
 
-//       {/* 8방향 리사이즈 핸들 노드 (pointer-events-auto 부여로 클릭/드래그 활성화) */}
-//       {/* 동(East - 너비 조절) */}
-//       <div
-//         onMouseDown={(e) => handleResizeStart(e, "e")}
-//         className="pointer-events-auto absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-e-resize hover:scale-125 transition-transform"
-//       />
-
-//       {/* 남(South - 높이 조절) */}
-//       <div
-//         onMouseDown={(e) => handleResizeStart(e, "s")}
-//         className="pointer-events-auto absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-2 border-blue-500 rounded-full cursor-s-resize hover:scale-125 transition-transform"
-//       />
-
-//       {/* 남동(South-East - 동시 조절) */}
-//       <div
-//         onMouseDown={(e) => handleResizeStart(e, "se")}
-//         className="pointer-events-auto absolute -right-1.5 -bottom-1.5 w-3.5 h-3.5 bg-blue-500 border-2 border-white rounded-sm cursor-se-resize hover:scale-125 transition-transform"
-//       />
-
-//       {/* 패딩/간격 조절 Quick Bar (컴포넌트 내부 여백 조절용 인라인 핸들) */}
-//       <div
-//         onMouseDown={(e) => {
-//           e.stopPropagation();
-//           // 패딩 전용 조절 마우스 이벤트 바인딩 로직
-//         }}
-//         className="pointer-events-auto absolute top-2 right-2 px-1 bg-amber-400 text-[9px] font-bold text-gray-800 rounded cursor-ew-resize opacity-80 hover:opacity-100"
-//         title="드래그하여 내부 패딩 조절"
-//       >
-//         PADDING
-//       </div>
-//     </div>
-//   );
-// }
+      {/* 2. 바로 위에 붙는 퀵 오버레이 툴바 */}
+      <FloatingOverlayToolbar
+        selectedId={selectedId}
+        selectedItem={selectedItem}
+        parentId={parentId}
+        onSelectParent={onSelectParent}
+        onDuplicate={onDuplicate}
+        onRemove={onRemove}
+      />
+    </div>
+  );
+}

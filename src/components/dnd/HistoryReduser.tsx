@@ -3,6 +3,7 @@ import {
   removeItemFromTree,
   updateItemInTree,
   updateLocalVarsInTree,
+  findItemInTree
 } from "@/src/utils/tree";
 import { ItemSchema, } from "@/src/types/builder";
 
@@ -36,7 +37,8 @@ export type BuilderAction =
   | { type: "UNDO" }
   | { type: "REDO" } 
   | { type: "UPDATE_LOCAL_VARS";  payload: { id: string; localVars:Record<string, any> }}
-  | { type: "COMMIT_HISTORY"};
+  | { type: "COMMIT_HISTORY"}
+  | {type: "DUPLICATE_ITEM"; payload: string };
 
 export const MAX_HISTORY_LIMIT = 30;
 
@@ -127,6 +129,22 @@ export function builderReducer(
     }
     case "COMMIT_HISTORY":
       return pushState(state);
+
+    case "DUPLICATE_ITEM": {
+      const targetItem = findItemInTree(state.tree,action.payload);
+      if (!targetItem) return state;
+      const duplicatedData = JSON.parse(JSON.stringify(targetItem));
+      const newItem: ItemSchema = {
+        ...duplicatedData,
+        id: `${targetItem.type}-DPL-${Date.now()}`,
+      };
+      const newTree = insertItemToTree(state.tree, action.payload, newItem, state.tree.length);
+      return pushState({
+        ...state,
+        tree: newTree,
+        selectedId: newItem.id,
+      });
+    }
     default:
       return state;
   }

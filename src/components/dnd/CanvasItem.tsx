@@ -35,7 +35,7 @@ export function CanvasItem({
   const isSelected = item.id === selectedId;
   const [dropPosition, setDropPosition] = useState<DropPosition>(null);
   const isRowLayout = parentFlexDirection.startsWith("row");
-
+  const currentContainerFlexDir = item.localVars?.flexDirection || parentFlexDirection || "column";
   const handleDragOver = (e:React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -45,7 +45,6 @@ export function CanvasItem({
       //좌우 배치 일경우
       const offsetX = e.clientX - rect.left;
       const width = rect.width;
-      const height = rect.height;
       if (item.type === "container") {
         if (offsetX < width * 0.2) setDropPosition("left");
         else if (offsetX > width * 0.8) setDropPosition("right");
@@ -95,8 +94,7 @@ export function CanvasItem({
     }
   };
 
-  const currentContainerFlexDir =
-    (item.localVars?.flexDirection as "row" | "column") || "column";
+
 
     return (
       <div className={cn("relative group", isRowLayout && "inline-block h-full")}>
@@ -119,15 +117,9 @@ export function CanvasItem({
                 e.stopPropagation();
                 onSelect(item.id,e);
               }}
-              onDragOver={(e) => {
-                handleDragOver
-              }}
-              onDragLeave={(e) => {
-                handleDragLeave
-              }}
-              onDrop={(e) => {
-                handleDrop
-              }}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
               style={{
                 ...convertLocalVarsToCssVars(item.localVars),
                 display: useLocalVar("display", "flex"),
@@ -135,19 +127,21 @@ export function CanvasItem({
                 gap: useLocalVar("gap", "12px"),
                 padding: useLocalVar("padding", "16px"),
                 backgroundColor: useLocalVar("bg", "#ffffff"),
+                width: item.localVars?.width || "auto",
+                height: item.localVars?.height || "auto",
+                transform: item.localVars?.rotate ? `rotate(${item.localVars.rotate})` : undefined
               }}
               className={cn(
                 "relative rounded-lg transition-all border-2 my-1 min-h-20 w-full",
                 dropPosition === "inside"
                   ? "border-blue-500 bg-blue-50/40"
-                  : isSelected
-                  ? "border-blue-500 ring-2 ring-blue-100"
+                  // : isSelected
+                  // ? "border-blue-500 ring-2 ring-blue-100"
                   : "border-gray-300 border-dashed hover:border-gray-400"
               )}
+              data-item-id={item.id}
             >
-              <span className="text-[10px] uppercase font-bold text-gray-400 block mb-2 pointer-events-none select-none">
-                Container ({item.id + currentContainerFlexDir})
-              </span>
+              
               <div
                 className={cn(
                   "w-full h-full min-h-12.5 flex",
@@ -167,26 +161,21 @@ export function CanvasItem({
                         itemIndex={idx}
                         parentId={item.id} 
                         onDropWithPosition={onDropWithPosition} 
+                        parentFlexDirection={currentContainerFlexDir}
                       />
                     )
                   )
                 ) : (
-                    <div className="h-12 flex items-center justify-center text-xs text-gray-400 pointer-events-none">
-                      여기에 요소를 드롭하세요 (Nested DropZone)
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-gray-400 block mb-2 pointer-events-none select-none">
+                        Container ({item.id + currentContainerFlexDir})
+                      </span>
+                      <div className="h-12 flex items-center justify-center text-xs text-gray-400 pointer-events-none">
+                        여기에 요소를 드롭하세요 (Nested DropZone)
+                      </div>
                     </div>
                   )}
               </div>
-              {isSelected && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemove(item.id,e);
-                  }}
-                  className="absolute -top-2.5 -right-2.5 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow z-10"
-                >
-                  ✕
-                </button>
-              )}
             </div>
             ):(
               <div
@@ -199,26 +188,21 @@ export function CanvasItem({
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
-
+                  data-item-id={item.id}
+                  style={{
+                    ...convertLocalVarsToCssVars(item.localVars), 
+                    width: item.localVars?.width || "auto",
+                    height: item.localVars?.height || "auto",
+                    transform: item.localVars?.rotate ? `rotate(${item.localVars.rotate})` : undefined
+                  }}
                   className={cn(
                     "relative p-1 rounded transition-all border-2 my-0.5 cursor-pointer",
-                    isSelected
-                      ? "border-blue-500 ring-2 ring-blue-100"
-                      : "border-transparent hover:border-gray-200"
+                    // isSelected
+                    //   ? "border-blue-500 ring-2 ring-blue-100"
+                    //   : "border-transparent hover:border-gray-200"
                   )}
                 >
                   {PrimitiveFactory({item})}
-                  {isSelected && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRemove(item.id,e);
-                      }}
-                      className="absolute -top-2.5 -right-2.5 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow z-10"
-                    >
-                      ✕
-                    </button>
-                )}
                 </div>
             )
         }
