@@ -37,12 +37,26 @@ export function SelectionOverlay({
       setRect(null);
       return;
     }
-
+    let animationFrameId: number;
     const updateRect = () => {
+      if (isDraggingRef.current) {
+        animationFrameId = requestAnimationFrame(updateRect);
+        return;
+      }
       const el = document.querySelector(`[data-item-id="${selectedId}"]`);
       if (el) {
-        setRect(el.getBoundingClientRect());
+        const rect : DOMRect = el.getBoundingClientRect();
+        const newRect = DOMRect.fromRect({
+            ...rect,
+            y: rect.top + window.scrollY,
+            x: rect.left + window.scrollX,
+            width: rect.width,
+            height: rect.height,
+          }
+        )
+        setRect(newRect);
       }
+      animationFrameId = requestAnimationFrame(updateRect);
     };
 
     updateRect();
@@ -50,6 +64,7 @@ export function SelectionOverlay({
     window.addEventListener("resize", updateRect);
 
     return () => {
+      cancelAnimationFrame(animationFrameId);
       window.removeEventListener("scroll", updateRect, true);
       window.removeEventListener("resize", updateRect);
     };
@@ -109,6 +124,8 @@ export function SelectionOverlay({
       const dy = e.clientY - startPosRef.current.y;
       const newWidth = Math.max(50, startPosRef.current.width + dx);
       const newHeight = Math.max(30, startPosRef.current.height + dy);
+      
+      setRect((prev) => (prev ? { ...prev, width: newWidth, height: newHeight } : null));
 
       // 실시간 localVars 업데이트 (width, height)
       onUpdateLocalVars(selectedId, {
@@ -117,8 +134,8 @@ export function SelectionOverlay({
         height: `${Math.round(newHeight)}px`,
       });
     } else if (isDraggingRef.current === "rotate") {
-      const centerX = startPosRef.current.x;
-      const centerY = startPosRef.current.y;
+      const centerX = rect? rect.left+rect.width/2:0 //startPosRef.current.x;
+      const centerY = rect? rect.top+rect.height/2:0 //startPosRef.current.y;
       const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
       const finalRotate = Math.round(angle + startPosRef.current.rotate);
 
