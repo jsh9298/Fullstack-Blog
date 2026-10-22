@@ -8,7 +8,7 @@ import { CanvasItem } from "@/src/components/dnd/CanvasItem";
 import { PropertyPanel } from "@/src/components/dnd/PropertyPanel";
 import { useCanvasHotkeys } from "@/src/hooks/useCanvasHotKey";
 import { SelectionOverlay } from "@/src/components/dnd/SelectionOverlay";
-import { findParentIdInTree,findItemInTree  } from "@/src/utils/tree";
+import { findParentIdInTree, findItemInTree } from "@/src/utils/tree";
 
 
 const PALETTE_ITEMS: { type: PrimitiveType; label: string }[] = [
@@ -66,7 +66,7 @@ export default function NativeDndPage() {
 
   useCanvasHotkeys({ dispatch, selectedId });
 
-  const selectedItem = selectedId != null ?findItemInTree(tree, selectedId):null;
+  const selectedItem = selectedId != null ? findItemInTree(tree, selectedId) : null;
 
   const parentId = findParentIdInTree(tree, selectedId);
 
@@ -90,7 +90,7 @@ export default function NativeDndPage() {
   ) => {
     if (draggedPaletteType) {
       const newItem: ItemSchema = {
-        id: `${draggedPaletteType}-${Date.now()}`,
+        id: ``,
         type: draggedPaletteType,
         props: getDefaultProps(draggedPaletteType),
         localVars: draggedPaletteType === "container" ? { flexDirection: "column" } : {},
@@ -98,7 +98,7 @@ export default function NativeDndPage() {
       };
       dispatch({
         type: "ADD_ITEM",
-        payload: { newItem, parentId: targetParentId, index: targetIndex },
+        payload: { newItem, type: draggedPaletteType, parentId: targetParentId, index: targetIndex },
       });
     } else if (draggedCanvasId) {
       dispatch({
@@ -167,6 +167,7 @@ export default function NativeDndPage() {
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => handleDropWithPosition(e, null, tree.length)}
             className="w-full max-w-3xl min-h-162.5 bg-white border-2 border-dashed border-gray-300 rounded-xl p-6 shadow-sm flex flex-col gap-2"
+            data-item-id="root"
           >
             {tree.length === 0 ? (
               <div className="h-full flex items-center justify-center text-gray-400 text-sm">
@@ -175,17 +176,17 @@ export default function NativeDndPage() {
             ) : (
               tree.map((item, idx) => {
                 const currentParentId = findParentIdInTree(tree, item.id);
-                return(
+                return (
                   <CanvasItem
-                        key={item.id}
-                        item={item}
-                        itemIndex={idx}
-                        parentId={currentParentId}
-                        selectedId={selectedId}
-                        onSelect={(id) => dispatch({ type: "SELECT_ITEM", payload: id })}
-                        onRemove={(id) => dispatch({ type: "REMOVE_ITEM", payload: id })}
-                        onDropWithPosition={handleDropWithPosition}
-                        onCanvasDragStart={handleCanvasDragStart} 
+                    key={item.id}
+                    item={item}
+                    itemIndex={idx}
+                    parentId={currentParentId}
+                    selectedId={selectedId}
+                    onSelect={(id) => dispatch({ type: "SELECT_ITEM", payload: id })}
+                    onRemove={(id) => dispatch({ type: "REMOVE_ITEM", payload: id })}
+                    onDropWithPosition={handleDropWithPosition}
+                    onCanvasDragStart={handleCanvasDragStart}
                   />
                 );
               })
@@ -200,7 +201,7 @@ export default function NativeDndPage() {
               onRemove={(id) => {
                 dispatch({ type: "REMOVE_ITEM", payload: id });
               }}
-              onUpdateLocalVars={(id, localVars) => 
+              onUpdateLocalVars={(id, localVars) =>
                 dispatch({ type: "UPDATE_LOCAL_VARS", payload: { id, localVars } })
               }
             />
@@ -212,9 +213,9 @@ export default function NativeDndPage() {
         <PropertyPanel
           selectedItem={selectedItem}
           onUpdateProps={(id, props) => dispatch({ type: "UPDATE_PROPS", payload: { id, props } })}
-          onUpdateLocalVars={(id, localVars) => dispatch({ type: "UPDATE_LOCAL_VARS", payload: { id, localVars } })} 
-          onDeleteItem={(id) => dispatch({type:"REMOVE_ITEM",payload:id})}
-          onCommit={()=> dispatch({type:"COMMIT_HISTORY"})}
+          onUpdateLocalVars={(id, localVars) => dispatch({ type: "UPDATE_LOCAL_VARS", payload: { id, localVars } })}
+          onDeleteItem={(id) => dispatch({ type: "REMOVE_ITEM", payload: id })}
+          onCommit={() => dispatch({ type: "COMMIT_HISTORY" })}
         />
       </div>
     </div>

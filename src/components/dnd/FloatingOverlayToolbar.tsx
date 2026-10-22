@@ -1,10 +1,11 @@
 "use client";
 
+import { ItemSchema } from "@/src/types/builder";
 import React, { useEffect, useState } from "react";
 
 interface FloatingOverlayToolbarProps {
   selectedId: string | null;
-  selectedItem: any | null; // 현재 선택된 CanvasItem 데이터
+  selectedItem: ItemSchema | null; // 현재 선택된 CanvasItem 데이터
   parentId: string | null;  // 현재 선택된 아이템의 부모 ID
   onSelectParent: (parentId: string) => void;
   onDuplicate: (id: string) => void;
@@ -19,7 +20,7 @@ export function FloatingOverlayToolbar({
   onDuplicate,
   onRemove,
 }: FloatingOverlayToolbarProps) {
-  const [coords, setCoords] = useState<{ top: number; left: number; width: number;bottom:number; } | null>(null);
+  const [coords, setCoords] = useState<{ top: number; left: number; width: number; bottom: number; } | null>(null);
 
   // 선택된 아이템의 DOM 위치를 추적하여 툴바 좌표 계산
   useEffect(() => {
@@ -78,9 +79,8 @@ export function FloatingOverlayToolbar({
         type="button"
         disabled={!parentId}
         onClick={() => parentId && onSelectParent(parentId)}
-        className={`px-1.5 py-0.5 rounded hover:bg-gray-800 transition-colors flex items-center gap-1 ${
-          !parentId ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
-        }`}
+        className={`px-1.5 py-0.5 rounded hover:bg-gray-800 transition-colors flex items-center gap-1 ${!parentId ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
+          }`}
         title="상위 컨테이너 선택"
       >
         <span>↑ 부모</span>

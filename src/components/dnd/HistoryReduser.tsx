@@ -3,9 +3,12 @@ import {
   removeItemFromTree,
   updateItemInTree,
   updateLocalVarsInTree,
-  findItemInTree
+  findItemInTree,
+  insertItemAfterTree,
+  cloneItemWithNewIds,
+  generateUniqueId
 } from "@/src/utils/tree";
-import { ItemSchema, } from "@/src/types/builder";
+import { ItemSchema, PrimitiveType, } from "@/src/types/builder";
 
 export interface BuilderState {
   tree: ItemSchema[];
@@ -17,33 +20,34 @@ export interface BuilderState {
 export type BuilderAction =
   | { type: "SELECT_ITEM"; payload: string | null }
   | {
-      type: "ADD_ITEM";
-      payload: {
-        newItem: ItemSchema;
-        parentId: string | null;
-        index?: number;
-      };
-    }
+    type: "ADD_ITEM";
+    payload: {
+      newItem: ItemSchema;
+      type: PrimitiveType;
+      parentId: string | null;
+      index?: number;
+    };
+  }
   | {
-      type: "MOVE_ITEM";
-      payload: {
-        activeId: string;
-        targetParentId: string | null;
-        index?: number;
-      };
-    }
+    type: "MOVE_ITEM";
+    payload: {
+      activeId: string;
+      targetParentId: string | null;
+      index?: number;
+    };
+  }
   | { type: "REMOVE_ITEM"; payload: string }
   | { type: "UPDATE_PROPS"; payload: { id: string; props: Record<string, any> } }
   | { type: "UNDO" }
-  | { type: "REDO" } 
-  | { type: "UPDATE_LOCAL_VARS";  payload: { id: string; localVars:Record<string, any> }}
-  | { type: "COMMIT_HISTORY"}
-  | {type: "DUPLICATE_ITEM"; payload: string };
+  | { type: "REDO" }
+  | { type: "UPDATE_LOCAL_VARS"; payload: { id: string; localVars: Record<string, any> } }
+  | { type: "COMMIT_HISTORY" }
+  | { type: "DUPLICATE_ITEM"; payload: string };
 
 export const MAX_HISTORY_LIMIT = 30;
 
-function pushState(state: BuilderState):BuilderState {
-   const { tree, history, historyIndex } = state;
+function pushState(state: BuilderState): BuilderState {
+  const { tree, history, historyIndex } = state;
 
   // 현재 트리 상태가 이전 히스토리 스냅샷과 동일하면 중복 저장 방지
   if (history[historyIndex] && JSON.stringify(history[historyIndex]) === JSON.stringify(tree)) {
@@ -51,23 +55,23 @@ function pushState(state: BuilderState):BuilderState {
   }
   // 히스토리에 새 상태 기록 헬퍼
   const slicedHistory = history.slice(0, historyIndex + 1);
-    
+
   const updatedHistory = [...slicedHistory, tree];
 
-    if (updatedHistory.length > MAX_HISTORY_LIMIT) {
-      const trimmedHistory = updatedHistory.slice(1);
-      return {
-        ...state,
-        history: trimmedHistory,
-        historyIndex: trimmedHistory.length - 1,
-      };
-    }
-
+  if (updatedHistory.length > MAX_HISTORY_LIMIT) {
+    const trimmedHistory = updatedHistory.slice(1);
     return {
       ...state,
-      history: updatedHistory,
-      historyIndex: updatedHistory.length - 1,
+      history: trimmedHistory,
+      historyIndex: trimmedHistory.length - 1,
     };
+  }
+
+  return {
+    ...state,
+    history: updatedHistory,
+    historyIndex: updatedHistory.length - 1,
+  };
 }
 
 export function builderReducer(
@@ -79,9 +83,10 @@ export function builderReducer(
       return { ...state, selectedId: action.payload };
 
     case "ADD_ITEM": {
-      const { newItem, parentId, index } = action.payload;
+      let { newItem, type, parentId, index } = action.payload;
+      newItem = { ...newItem, id: generateUniqueId(state.tree, type) };
       const newTree = insertItemToTree(state.tree, parentId, newItem, index);
-      return pushState({...state,tree:newTree,selectedId:newItem.id});
+      return pushState({ ...state, tree: newTree, selectedId: newItem.id });
     }
 
     case "MOVE_ITEM": {
@@ -90,21 +95,21 @@ export function builderReducer(
       if (!removedItem) return state;
 
       const finalTree = insertItemToTree(treeAfterRemove, targetParentId, removedItem, index);
-      return pushState({...state,tree:finalTree,selectedId:activeId});
+      return pushState({ ...state, tree: finalTree, selectedId: activeId });
     }
 
     case "REMOVE_ITEM": {
       const { newTree } = removeItemFromTree(state.tree, action.payload);
-      return pushState({...state,tree:newTree,selectedId: null});
+      return pushState({ ...state, tree: newTree, selectedId: null });
     }
 
     case "UPDATE_PROPS": {
       const newTree = updateItemInTree(state.tree, action.payload.id, action.payload.props);
       return { ...state, tree: newTree };
     }
-    
-    case "UPDATE_LOCAL_VARS" : {
-      const newTree = updateLocalVarsInTree(state.tree,action.payload.id,action.payload.localVars);
+
+    case "UPDATE_LOCAL_VARS": {
+      const newTree = updateLocalVarsInTree(state.tree, action.payload.id, action.payload.localVars);
       return { ...state, tree: newTree };
     }
 
@@ -131,14 +136,10 @@ export function builderReducer(
       return pushState(state);
 
     case "DUPLICATE_ITEM": {
-      const targetItem = findItemInTree(state.tree,action.payload);
+      const targetItem = findItemInTree(state.tree, action.payload);
       if (!targetItem) return state;
-      const duplicatedData = JSON.parse(JSON.stringify(targetItem));
-      const newItem: ItemSchema = {
-        ...duplicatedData,
-        id: `${targetItem.type}-DPL-${Date.now()}`,
-      };
-      const newTree = insertItemToTree(state.tree, action.payload, newItem, state.tree.length);
+      const newItem: ItemSchema = cloneItemWithNewIds(state.tree, targetItem);
+      const newTree = insertItemAfterTree(state.tree, action.payload, newItem);
       return pushState({
         ...state,
         tree: newTree,

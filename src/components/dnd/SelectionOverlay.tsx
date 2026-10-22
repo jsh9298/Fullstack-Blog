@@ -45,14 +45,14 @@ export function SelectionOverlay({
       }
       const el = document.querySelector(`[data-item-id="${selectedId}"]`);
       if (el) {
-        const rect : DOMRect = el.getBoundingClientRect();
+        const rect: DOMRect = el.getBoundingClientRect();
         const newRect = DOMRect.fromRect({
-            ...rect,
-            y: rect.top + window.scrollY,
-            x: rect.left + window.scrollX,
-            width: rect.width,
-            height: rect.height,
-          }
+          ...rect,
+          y: rect.top + window.scrollY,
+          x: rect.left + window.scrollX,
+          width: rect.width,
+          height: rect.height,
+        }
         )
         setRect(newRect);
       }
@@ -68,7 +68,7 @@ export function SelectionOverlay({
       window.removeEventListener("scroll", updateRect, true);
       window.removeEventListener("resize", updateRect);
     };
-  }, [selectedId, selectedItem]);
+  }, [selectedId, selectedItem, parentId]);
 
   // ───────── 크기 조절(Resize) 시작 ─────────
   const handleResizeStart = (e: React.MouseEvent) => {
@@ -124,7 +124,7 @@ export function SelectionOverlay({
       const dy = e.clientY - startPosRef.current.y;
       const newWidth = Math.max(50, startPosRef.current.width + dx);
       const newHeight = Math.max(30, startPosRef.current.height + dy);
-      
+
       setRect((prev) => (prev ? { ...prev, width: newWidth, height: newHeight } : null));
 
       // 실시간 localVars 업데이트 (width, height)
@@ -134,8 +134,8 @@ export function SelectionOverlay({
         height: `${Math.round(newHeight)}px`,
       });
     } else if (isDraggingRef.current === "rotate") {
-      const centerX = rect? rect.left+rect.width/2:0 //startPosRef.current.x;
-      const centerY = rect? rect.top+rect.height/2:0 //startPosRef.current.y;
+      const centerX = rect ? rect.left + rect.width / 2 : 0 //startPosRef.current.x;
+      const centerY = rect ? rect.top + rect.height / 2 : 0 //startPosRef.current.y;
       const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
       const finalRotate = Math.round(angle + startPosRef.current.rotate);
 
