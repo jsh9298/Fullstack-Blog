@@ -65,7 +65,7 @@ export default function NativeDndPage() {
   const [draggedCanvasId, setDraggedCanvasId] = useState<string | null>(null);
 
   useCanvasHotkeys({ dispatch, selectedId });
-
+  
   const selectedItem = selectedId != null ? findItemInTree(tree, selectedId) : null;
 
   const parentId = findParentIdInTree(tree, selectedId);

@@ -5,6 +5,7 @@ import { ItemSchema } from "@/src/types/builder";
 import { PrimitiveFactory } from "./PrimitiveFactory";
 import { cn } from "@/src/utils/cn";
 import { convertLocalVarsToCssVars, useLocalVar } from "@/src/utils/style";
+import { useAutoExpandParent } from "@/src/hooks/useAutoExpandParent";
 
 interface CanvasItemProps {
   item: ItemSchema;
@@ -36,6 +37,9 @@ export function CanvasItem({
   const [dropPosition, setDropPosition] = useState<DropPosition>(null);
   const isRowLayout = parentFlexDirection.startsWith("row");
   const currentContainerFlexDir = item.localVars?.flexDirection || parentFlexDirection || "column";
+
+  useAutoExpandParent(item.id, item.children);
+
   const handleDragOver = (e:React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -69,7 +73,7 @@ export function CanvasItem({
       }
     }
   };
-
+  
   const handleDragLeave = (e: React.DragEvent) => {
     e.stopPropagation();
     setDropPosition(null);
